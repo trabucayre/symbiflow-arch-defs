@@ -895,7 +895,7 @@ def fix_name(n, is_io=False):
 
 
 def add_globals(g, ic):
-    glb = g.segments["global"]
+    glb = g.segments["tile_global"]
 
     # Create the global networks
     for gn in range(0, 8):
@@ -1087,7 +1087,7 @@ def generate_routing(g, verbose=False):
     print("#############################################################################")
     print("# Internal Block wires")
     print("#############################################################################")
-    segment_global = g.segments["global"]
+    segment_global = g.segments["tile_global"]
     segment_dummy = g.segments["dummy"]
     segment_local = g.segments["local"]
 
