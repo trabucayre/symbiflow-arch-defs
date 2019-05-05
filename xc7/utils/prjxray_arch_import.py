@@ -303,10 +303,16 @@ def main():
     # Initialize grid mapper
     with DatabaseCache(args.connection_database, read_only=True) as conn:
 
-        # FIXME: Always import tile types
-        tile_types = set(tile_types)
-        tile_types |= set(["CLBLL_L", "CLBLL_R", "CLBLM_L", "CLBLM_R"])
-        tile_types = tuple(tile_types)
+        # Remove duplicates
+        tile_types = tuple(set(tile_types))
+
+        # FIXME: Always import CLB tiles. The split is handled in this script.
+        # for now they are added here because if they were specified in device
+        # CMake file then the build system would look for dependencied which
+        # are there no more.
+        tile_types = tuple(
+            set(tile_types) | set(["CLBLL_L", "CLBLL_R", "CLBLM_L", "CLBLM_R"])
+            )
 
         # The object will read data from the DB so it can live
         # outside the scope of the "with" statement

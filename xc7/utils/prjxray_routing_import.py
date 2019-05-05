@@ -174,7 +174,9 @@ def import_graph_nodes(conn, graph, node_mapping):
 
         side = node.loc.side
 
-        # FIXME: This is gonna be VERY wrong...
+        # FIXME: At this point the VPR does not take pin directions into
+        # consideration. So here we take the first not None node whichever
+        # direction is it.
         node_idx = None
         if left_graph_node_pkey is not None:
             node_idx = left_graph_node_pkey

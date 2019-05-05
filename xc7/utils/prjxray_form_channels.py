@@ -1026,55 +1026,7 @@ def remap_tile_grid(conn, grid_map, tile_type_map):
 
     c.connection.commit()
 
-
-# def remap_wires(conn, wire_pkey_map):
-#     """
-#     Remaps entries in the wire table which are relevant to physical tiles
-#     so that they become relevant to VPR tiles.
-#
-#     Args:
-#         conn:
-#         wire_pkey_map:
-#
-#     Returns:
-#     """
-#
-#     c = conn.cursor()
-#     c1 = conn.cursor()
-#     c2 = conn.cursor()
-#
-#     c2.execute("BEGIN EXCLUSIVE TRANSACTION")
-#
-#     # FIXME: This function seems to be very inefficient. No idea how to
-#     # fix it right now.
-#
-#     # Iterate over wire in tiles to be remapped
-#     for wire_in_tile_pkey, vpr_wire_in_tile_pkeys in progressbar.progressbar(wire_pkey_map.items()):
-#         num_vpr_wire_in_tile_pkeys = len(vpr_wire_in_tile_pkeys)
-#
-#         # Iterate over wire instances to be remapped
-#         for wire_data in c.execute("SELECT * FROM wire WHERE wire_in_tile_pkey = (?)", (wire_in_tile_pkey, )):
-#             wire_pkey = wire_data[0]
-#             tile_pkey = wire_data[2]
-#
-#             # Iterate over corresponding VPR tiles
-#             # FIXME: Reasonable comment why j = i % something...
-#             for i, vpr_tile_pkey in enumerate(c1.execute("SELECT vpr_tile_pkey FROM grid_loc_map WHERE phy_tile_pkey = (?)", (tile_pkey, ))):
-#                 j = i % num_vpr_wire_in_tile_pkeys
-#
-#                 # Insert
-#                 c2.execute("INSERT INTO wire(node_pkey, tile_pkey, wire_in_tile_pkey, graph_node_pkey, top_graph_node_pkey, bottom_graph_node_pkey, left_graph_node_pkey, right_graph_node_pkey) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-#                            (wire_data[1], vpr_tile_pkey[0], vpr_wire_in_tile_pkeys[j], wire_data[4], wire_data[5], wire_data[6], wire_data[7], wire_data[8]))
-#
-#                 #print("{},{} -> {}.{}".format(tile_pkey, wire_in_tile_pkey, vpr_tile_pkey, vpr_wire_in_tile_pkey))
-#
-#             # Delete the wire
-#             c2.execute("DELETE FROM wire WHERE pkey = (?)", (wire_pkey, ))
-#
-#     c2.execute("COMMIT TRANSACTION")
-
 # .............................................................................
-
 
 def main():
     parser = argparse.ArgumentParser()

@@ -134,7 +134,11 @@ def main():
 
         # Map tile location to the VPR grid
         vpr_loc = grid_loc_mapper.get_vpr_loc((loc.grid_x, loc.grid_y))
-        vpr_loc = vpr_loc[0]  # FIXME: Assuming no split of that tile!
+
+        # FIXME: Assuming no split of that tile!
+        assert len(vpr_loc) == 1
+
+        vpr_loc = vpr_loc[0]
         vpr_loc = GridLoc(vpr_loc[0], vpr_loc[1])
 
         # Make sure connecting wire is not in ROI!

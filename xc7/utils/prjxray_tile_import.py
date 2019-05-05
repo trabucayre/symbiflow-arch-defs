@@ -185,13 +185,13 @@ def main():
                 file=sys.stderr
             )
 
-        print("Input wires:")
-        for w in input_wires:
-            print(" ", w)
+#        print("Input wires:")
+#        for w in input_wires:
+#            print(" ", w)
 
-        print("Output wires:")
-        for w in output_wires:
-            print(" ", w)
+#        print("Output wires:")
+#        for w in output_wires:
+#            print(" ", w)
 
     else:
         for site in tile.get_sites():
@@ -568,7 +568,11 @@ def main():
         }
     )
 
-    # FIXME: Hard coded hack
+    # FIXME: The problem: here we need pin assignments for the SLICEL/SLICEM but
+    # for example the SLICEM in arch.xml means either CLBLM_L_SLICEM_X1Y0 or
+    # CLBLM_R_SLICEM_X0Y0. Each of them may have different pin assignments. So
+    # here we chose only one in arbitrary way. Also the names are hard-coded
+    # here for now:
     if   args.tile == "CLBLM_L" and "SLICEL" in args.site_types:
         assignment_tile_type = "CLBLM_L_SLICEL_X1Y0"
     elif args.tile == "CLBLM_L" and "SLICEM" in args.site_types:
@@ -579,7 +583,6 @@ def main():
         assignment_tile_type = "CLBLM_R_SLICEM_X0Y0"
     else:
         assignment_tile_type = args.tile
-
 
     if len(input_wires) > 0 or len(output_wires) > 0:
         pin_assignments = json.load(args.pin_assignments)
