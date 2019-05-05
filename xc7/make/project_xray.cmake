@@ -150,8 +150,8 @@ function(PROJECT_XRAY_ARCH)
   set(CREATE_EDGES ${symbiflow-arch-defs_SOURCE_DIR}/xc7/utils/prjxray_create_edges.py)
   set(DEPS ${PRJXRAY_DB_DIR}/${PART}/tilegrid.json)
 
-  # FIXME: This will add dependency on SLICE and CLBLL
-  set(DEP_TILE_TYPES ${PROJECT_XRAY_ARCH_TILE_TYPES} "SLICEL" "SLICEM" "CLBLL_L" "CLBLL_R")
+  # FIXME: This will add dependency on SLICE tiles
+  set(DEP_TILE_TYPES ${PROJECT_XRAY_ARCH_TILE_TYPES} "SLICEL" "SLICEM")
 
   set(ARCH_INCLUDE_FILES "")
   foreach(TILE_TYPE ${DEP_TILE_TYPES})

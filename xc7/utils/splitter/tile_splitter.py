@@ -254,11 +254,56 @@ class TileSplitter(object):
         # Return wire and pip pkey map
         return wire_pkey_map, pip_pkey_map
 
-    def import_tile_wire_and_pip_pkey_map(self, wire_pkey_map, pip_pkey_map):
-        # Do we need those maps in the SQL db? If so then most content of such
-        # tables will be one-to-one pkey correspondence of the same pkeys. Only
-        # a few will be different.
-        pass
+    def build_equivalent_site_wire_map(self):
+        """
+        Builds a map which binds togeather the same site wires that come
+        from the same site type but from different tile types. They have
+        different names but later on they should be treated as equal.
+        """
+
+        site_wire_map = {}
+
+        c  = self.sql_db.cursor()
+        c2 = self.sql_db.cursor()
+
+        # For each tile to split
+        for tile_type in self.tile_types_to_split:
+
+            # Get tile type pkey
+            tile_type_pkey = c.execute("SELECT pkey FROM tile_type WHERE name = (?)", (tile_type,)).fetchone()[0]
+
+            # Loop over all tile type wires
+            for wire, site_pkey, site_pin_pkey in c.execute("SELECT name, site_pkey, site_pin_pkey FROM wire_in_tile WHERE tile_type_pkey = (?)", (tile_type_pkey,)):
+
+                # Skip non-site wires
+                if site_pkey is None or site_pin_pkey is None:
+                    continue
+
+                # Get site type and site pin as strings
+                (site_type,) = c2.execute("SELECT name FROM site_type WHERE pkey = (SELECT site_type_pkey FROM site WHERE pkey = (?))", (site_pkey,)).fetchone()
+                (site_pin,)  = c2.execute("SELECT name FROM site_pin WHERE pkey = (?)", (site_pin_pkey,)).fetchone()
+
+                #print("{} - {}.{}.{}".format(wire, tile_type, site_type, site_pin))
+
+                # Append data to the map
+                key = (site_type, site_pin)
+                self.append_to_map(site_wire_map, key, wire)
+
+        # Remove duplicates from the map
+        for key in site_wire_map.keys():
+            site_wire_map[key] = tuple(set(site_wire_map[key]))
+
+        # Reformat the map
+        final_site_wire_map = {}
+        for key, wires in site_wire_map.items():
+            for wire in wires:
+                final_site_wire_map[wire] = wires
+
+#        # Dump
+#        for k in sorted(list(final_site_wire_map.keys())):
+#            print(k, final_site_wire_map[k])
+            
+        return final_site_wire_map
 
     # .........................................................................
 
@@ -310,6 +355,8 @@ class TileSplitter(object):
 
         return GenericMap(fwd_map, bwd_map)
 
+    # .........................................................................
+
     def import_tile_type_map(self, tile_type_map):
         """
         Imports tile type map to the database
@@ -327,6 +374,18 @@ class TileSplitter(object):
                 c.execute("INSERT INTO tile_type_map(phy_tile_type_pkey, vpr_tile_type_pkey) VALUES (?, ?)",
                           (phy_tile_type_pkey, vpr_tile_type_pkey))
 
+    def import_equivalent_site_wire_map(self, site_wire_map):
+        """
+        Imports the equivalent side wire map to the SQL database
+        """
+        c = self.sql_db.cursor()
+
+        for key, values in site_wire_map.items():
+            for value in values:
+
+                # Insert
+                c.execute("INSERT INTO site_wire_map(wire_name_a, wire_name_b) VALUES (?, ?)", (key, value))
+
     # .........................................................................
 
     def split(self):
@@ -342,6 +401,12 @@ class TileSplitter(object):
 
         # Remap tile wires and pips
         wire_pkey_map, pip_pkey_map = self.remap_tile_wires_and_pips()
+
+        # Create equivalent site wire map
+        site_wire_map = self.build_equivalent_site_wire_map()
+
+        # Import the site wire map
+        self.import_equivalent_site_wire_map(site_wire_map)
 
         return tile_type_map, wire_pkey_map, pip_pkey_map
 

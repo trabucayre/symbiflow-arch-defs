@@ -604,6 +604,13 @@ def main():
         src_pin = 'BLK_TI-' + src_tile_alias + "." + src_tile_pin[1]
         dst_pin = 'BLK_TI-' + dst_tile_alias + "." + dst_tile_pin[1]
 
+        # FIXME: This is a hack. Since we are importing SLICEs from
+        # CLBLM skip direct connections related to CLBLL
+        if "CLBLL" in src_tile_pin[1]:
+            continue
+        if "CLBLL" in dst_tile_pin[1]:
+            continue
+
         # Check if such a connection is not already present
         key = (src_pin, dst_pin)
 

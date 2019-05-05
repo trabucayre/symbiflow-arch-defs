@@ -297,3 +297,12 @@ CREATE TABLE tile_type_map(
     FOREIGN KEY(phy_tile_type_pkey) REFERENCES tile_type(pkey),
     FOREIGN KEY(vpr_tile_type_pkey) REFERENCES tile_type(pkey)
 );
+
+-- Site wire map.
+-- Holds informatio which site wires of a tile type are equivalent for same
+-- site types.
+CREATE TABLE site_wire_map(
+    wire_name_a TEXT,
+    wire_name_b TEXT
+);
+

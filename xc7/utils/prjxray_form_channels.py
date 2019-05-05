@@ -49,8 +49,6 @@ from prjxray_db_cache import DatabaseCache
 from splitter.grid_splitter import GridSplitter
 from splitter.tile_splitter import TileSplitter
 
-import pprofile
-
 def import_site_type(db, c, site_types, site_type_name):
     assert site_type_name not in site_types
     site_type = db.get_site_type(site_type_name)
@@ -245,7 +243,6 @@ def import_nodes(db, conn):
 
                 wire_pkey = c3.lastrowid
                 wires[wire_pkey] = None
-
 
                 # Now it is allowed to have multiple instances of the same wire
                 # for a given (physical tile, wire) key. This is because some
@@ -1103,8 +1100,7 @@ def main():
         print("{}: Initial database formed".format(datetime.datetime.now()))
 
         # List of tile types to split FIXME: Hard coded !
-        #tile_types_to_split = ["CLBLL_L", "CLBLL_R", "CLBLM_L", "CLBLM_R"]
-        tile_types_to_split = ["CLBLM_L", "CLBLM_R"]
+        tile_types_to_split = ["CLBLL_L", "CLBLL_R", "CLBLM_L", "CLBLM_R"]
 
         gs = GridSplitter(conn)
         gs.set_tile_types_to_split(tile_types_to_split)

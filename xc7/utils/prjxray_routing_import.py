@@ -102,6 +102,14 @@ def import_graph_nodes(conn, graph, node_mapping):
 
         pin = m.group(2)
 
+        # Get possible wire names
+        wire_names = c.execute("SELECT wire_name_b FROM site_wire_map WHERE wire_name_a = (?)", (pin, )).fetchall()
+        wire_names = [w[0] for w in wire_names]
+
+        # No wire name alternatives, we are on a tile not being split
+        if len(wire_names) == 0:
+            wire_names = [pin]
+
         # Get tile pkey and tile name
         if gridloc not in tile_loc_to_pkey:
             (tile_pkey, tile_type_pkey,) = c.execute("SELECT pkey, tile_type_pkey FROM tile WHERE grid_x = (?) AND grid_y = (?)", (gridloc[0], gridloc[1])).fetchone()
@@ -113,27 +121,34 @@ def import_graph_nodes(conn, graph, node_mapping):
         key = (tile_type, pin)
 
         if key not in tile_type_wire_to_pkey:
-            c.execute(
-                """
-SELECT
-  pkey
-FROM
-  wire_in_tile
-WHERE
-  tile_type_pkey = (
-    SELECT
-      pkey
-    FROM
-      tile_type
-    WHERE
-      name = ?
-  )
-  AND name = ?;""", (tile_type, pin)
-            )
 
-            result = c.fetchone()
-            assert result is not None, (tile_type, pin)
-            (wire_in_tile_pkey, ) = result
+            # Get wire_in_tile pkey
+            wire_in_tile_pkey = None
+            for wire_name in wire_names:
+
+                c.execute("""
+                    SELECT
+                      pkey
+                    FROM
+                      wire_in_tile
+                    WHERE
+                      tile_type_pkey = (
+                        SELECT
+                          pkey
+                        FROM
+                          tile_type
+                        WHERE
+                          name = ?
+                      )
+                      AND name = ?;""", (tile_type, wire_name)
+                )
+
+                wire_in_tile_pkey = c.fetchone()
+                if wire_in_tile_pkey is not None:
+                    break
+
+            assert wire_in_tile_pkey is not None, (tile_type, pin)
+            (wire_in_tile_pkey, ) = wire_in_tile_pkey
 
             tile_type_wire_to_pkey[key] = wire_in_tile_pkey
         else:

@@ -185,13 +185,13 @@ def main():
                 file=sys.stderr
             )
 
-        # print("Input wires:")
-        # for w in input_wires:
-        #     print(" ", w)
-        #
-        # print("Output wires:")
-        # for w in output_wires:
-        #     print(" ", w)
+        print("Input wires:")
+        for w in input_wires:
+            print(" ", w)
+
+        print("Output wires:")
+        for w in output_wires:
+            print(" ", w)
 
     else:
         for site in tile.get_sites():
@@ -617,7 +617,6 @@ def main():
     pb_type_str = ET.tostring(pb_type_xml, pretty_print=True).decode('utf-8')
     args.output_pb_type.write(pb_type_str)
     args.output_pb_type.close()
-
 
 if __name__ == '__main__':
     main()
