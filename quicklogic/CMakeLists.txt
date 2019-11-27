@@ -4,8 +4,8 @@ add_subdirectory(tiles)
 get_target_property_required(PYTHON3 env PYTHON3)
 define_arch(
   ARCH quicklogic-polarpro-3e
-  YOSYS_SYNTH_SCRIPT ${symbiflow-arch-defs_SOURCE_DIR}/testarch/yosys/synth.tcl
-  YOSYS_CONV_SCRIPT ${symbiflow-arch-defs_SOURCE_DIR}/testarch/yosys/conv.tcl
+  YOSYS_SYNTH_SCRIPT ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/yosys/synth.tcl
+  YOSYS_CONV_SCRIPT ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/yosys/conv.tcl
   DEVICE_FULL_TEMPLATE \${DEVICE}
   VPR_ARCH_ARGS " \
     --router_init_wirelength_abort_threshold 20 \
