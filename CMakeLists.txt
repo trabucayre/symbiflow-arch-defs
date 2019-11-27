@@ -76,6 +76,11 @@ add_conda_package(
   NAME iverilog
   PROVIDES iverilog vvp
   )
+# For python-symbiflow-v2x
+add_conda_package(
+  NAME libiconv
+  PROVIDES libiconv
+  )
 
 add_conda_pip(
   NAME progressbar2
