@@ -1,8 +1,8 @@
 add_file_target(FILE arch.xml SCANNER_TYPE xml)
 
 define_device_type(
-  DEVICE_TYPE polarpro-3e-top-routing-virt
-  ARCH quicklogic-polarpro-3e
+  DEVICE_TYPE ql-s3-top-routing-virt
+  ARCH ql-s3
   ARCH_XML arch.xml
   UPDATE_TILES
 )

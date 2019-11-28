@@ -1,9 +1,9 @@
-add_subdirectory(polarpro-3e-top-routing-virt)
+add_subdirectory(s3-top-routing-virt)
 
 define_device(
-  DEVICE polarpro-3e
-  ARCH quicklogic-polarpro-3e
-  DEVICE_TYPE polarpro-3e-top-routing-virt
+  DEVICE ql-eos-s3
+  ARCH ql-s3
+  DEVICE_TYPE ql-s3-top-routing-virt
   PACKAGES wlcsp
   CACHE_PLACE_DELAY
   CACHE_ARGS
