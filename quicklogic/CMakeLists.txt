@@ -3,7 +3,7 @@ add_subdirectory(tiles)
 
 get_target_property_required(PYTHON3 env PYTHON3)
 define_arch(
-  ARCH quicklogic-polarpro-3e
+  ARCH ql-s3
   YOSYS_SYNTH_SCRIPT ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/yosys/synth.tcl
   YOSYS_CONV_SCRIPT ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/yosys/conv.tcl
   DEVICE_FULL_TEMPLATE \${DEVICE}
