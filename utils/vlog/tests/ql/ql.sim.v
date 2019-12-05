@@ -1,11 +1,12 @@
-`default_nettype none
-`include "cblock/cblock.sim.v"
+`include "primitives/ff/ff.sim.v"
 
-module QL (clk, D, E, Q);
+module QL (clk, D, S, R, E, Q);
 	input wire clk;
 	input wire D;
-    input wire E;
+	input wire S;
+	input wire R;
+	input wire E;
 	output wire Q;
 
-    QL_FF ff0(clk, D, E, Q);
+	FF ff0(clk, D, S, R, E, Q);
 endmodule
