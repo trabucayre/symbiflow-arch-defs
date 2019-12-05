@@ -202,6 +202,7 @@ else:
         clocks = yosys.run.list_clocks(args.infiles, top)
 
         for name, width, bits, iodir in ports:
+            nocomb = tmod.net_attr(name, "NO_COMB")
             attrs = dict(name=name)
             sinks = yosys.run.get_combinational_sinks(args.infiles, top, name)
 
@@ -216,7 +217,7 @@ else:
                 attrs["is_clock"] = "1"
             else:
                 clks = list()
-                if len(sinks) > 0 and iodir == "input":
+                if len(sinks) > 0 and iodir == "input" and nocomb is None:
                     attrs["combinational_sink_ports"] = " ".join(sinks)
                 for clk in clocks:
                     if is_clock_assoc(args.infiles, top, clk, name, iodir):
