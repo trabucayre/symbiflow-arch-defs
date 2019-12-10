@@ -42,3 +42,18 @@ add_fpga_target(
   INPUT_IO_FILE ${COMMON}/arty_swbut.pcf
   EXPLICIT_ADD_FILE_TARGET
 )
+
+add_file_target(FILE counter_zedboard.v SCANNER_TYPE verilog)
+
+add_fpga_target(
+  NAME counter_zedboard
+  BOARD zedboard-full
+  SOURCES counter_zedboard.v
+  INPUT_IO_FILE ../common/zedboard.pcf
+  EXPLICIT_ADD_FILE_TARGET
+)
+
+add_vivado_target(
+  NAME counter_zedboard_vivado
+  PARENT_NAME counter_zedboard
+)
