@@ -5,14 +5,14 @@
 
 import argparse
 
-from migen import *
+from migen import Module, ClockDomain, Signal, Instance
 
 from litex.boards.platforms import arty
 from litex.build.xilinx.vivado import vivado_build_args, vivado_build_argdict
 
-from litex.soc.cores.clock import *
-from litex.soc.integration.soc_sdram import *
-from litex.soc.integration.builder import *
+from litex.soc.cores.clock import S7PLL, S7IDELAYCTRL
+from litex.soc.integration.soc_sdram import SoCSDRAM, soc_sdram_args, soc_sdram_argdict
+from litex.soc.integration.builder import Builder, builder_args, builder_argdict
 
 from litedram.modules import MT41K128M16
 from litedram.phy import s7ddrphy
