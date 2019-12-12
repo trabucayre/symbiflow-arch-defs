@@ -115,8 +115,11 @@ def main():
             add_pack_pattern(direct, 'OSERDES')
 
         # Adding OSERDES pack patterns
+
+        #if IOPAD_OLOGIC_REGEX.match(dir_name) or check_direct(direct, [
         if "OQ_to_IOB33M" in dir_name or check_direct(direct, [
             ('OBUFTDS_M', 'I'),
+            ('OBUFTDS_M', 'O'),
             ('OSERDES', 'OQ'),
             ('IOB33M', 'I'),
             ('IOB33M', 'O'),
