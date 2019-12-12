@@ -33,12 +33,12 @@ input wire rst,
 
 input  wire [7:0] sw,
 
-output wire  diff_p,
-output wire  diff_n
+output wire  [1:0] diff_p,
+output wire  [1:0] diff_n
 );
 wire [7:0] INPUTS;
-wire  buf_i;
-wire  buf_t;
+wire [1:0] buf_i;
+wire [1:0] buf_t;
 wire CLK;
 wire CLKDIV;
 
@@ -53,7 +53,7 @@ OSERDESE2 #(
 .DATA_RATE_TQ   ("BUF"),
 .TRISTATE_WIDTH (1)
 )
-oserdes
+oserdes_0
 (
 .CLK    (CLK),
 .CLKDIV (CLKDIV),
@@ -68,16 +68,46 @@ oserdes
 .D6     (INPUTS[5]),
 .D7     (INPUTS[6]),
 .D8     (INPUTS[7]),
-.OQ     (buf_i),
+.OQ     (buf_i[0]),
 
 .TCE    (1'b1),
 .T1     (1'b0), // All 0 to keep OBUFT always on.
 .T2     (1'b0),
 .T3     (1'b0),
 .T4     (1'b0),
-.TQ     (buf_t)
+.TQ     (buf_t[0])
 );
 
+OSERDESE2 #(
+.DATA_RATE_OQ   ("DDR"),
+.DATA_WIDTH     (8),
+.DATA_RATE_TQ   ("BUF"),
+.TRISTATE_WIDTH (1)
+)
+oserdes_1
+(
+.CLK    (CLK),
+.CLKDIV (CLKDIV),
+.RST    (rst),
+
+.OCE    (1'b1),
+.D1     (INPUTS[0]),
+.D2     (INPUTS[1]),
+.D3     (INPUTS[2]),
+.D4     (INPUTS[3]),
+.D5     (INPUTS[4]),
+.D6     (INPUTS[5]),
+.D7     (INPUTS[6]),
+.D8     (INPUTS[7]),
+.OQ     (buf_i[1]),
+
+.TCE    (1'b1),
+.T1     (1'b0), // All 0 to keep OBUFT always on.
+.T2     (1'b0),
+.T3     (1'b0),
+.T4     (1'b0),
+.TQ     (buf_t[1])
+);
 // ============================================================================
 // OBUFTDS
 
@@ -85,10 +115,19 @@ OBUFTDS # (
   .IOSTANDARD("DIFF_SSTL135"),
   .SLEW("FAST")
 ) obuftds_0 (
-  .I(buf_i),
-  .T(buf_t),
-  .O(diff_p), // LED2
-  .OB(diff_n) // LED3
+  .I(buf_i[0]),
+  .T(buf_t[0]),
+  .O(diff_p[0]), // LED2
+  .OB(diff_n[0]) // LED3
+);
+OBUFTDS # (
+  .IOSTANDARD("DIFF_SSTL135"),
+  .SLEW("FAST")
+) obuftds_1 (
+  .I(buf_i[1]),
+  .T(buf_t[1]),
+  .O(diff_p[1]), // LED2
+  .OB(diff_n[1]) // LED3
 );
 
 wire locked;
