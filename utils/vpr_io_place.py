@@ -3,6 +3,7 @@ from collections import OrderedDict, namedtuple
 import itertools
 import eblif
 import lxml.etree as ET
+import re
 
 IoConstraint = namedtuple('IoConstraint', 'name x y z comment')
 
@@ -34,9 +35,15 @@ class IoPlace(object):
         # For example, an inout port 'A' is split into 'A_$inp' and 'A_$outp'
         self.net_map = {}
         self.inout_nets = set()
+        inout_regexp = re.compile("(^.*)_\$(inp|out)(\[[0-9]+\])?")
         for net in itertools.chain(self.inputs, self.outputs):
-            if net.endswith("_$inp") or net.endswith("_$out"):
-                alias = net.rsplit("_", 1)[0]
+            inout_match = inout_regexp.match(net)
+            if inout_match is not None:
+                alias = inout_match.group(1)
+                #Extract index if we have an io bus
+                bus_index = inout_match.group(3)
+                if bus_index is not None:
+                    alias += bus_index
                 self.inout_nets.add(alias)
                 self.net_map[net] = alias
             else:
@@ -73,8 +80,14 @@ class IoPlace(object):
 
         # This is an inout net
         if net_name in self.inout_nets:
+            # Find the net name and index
+            inout_match = re.match("^([A-Za-z0-9]+)(\[[0-9]+\])?", net_name)
+            if inout_match is not None:
+                net_name = inout_match.group(1)
+                bus_index = inout_match.group(2)
             for prefix, suffix in zip(["", "out:"], ["_$inp", "_$out"]):
                 name = prefix + net_name + suffix
+                name = name + bus_index if bus_index is not None else name
                 self.constraints[name] = IoConstraint(
                     name=name,
                     x=loc[0],
