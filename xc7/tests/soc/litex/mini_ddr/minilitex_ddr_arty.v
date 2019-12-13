@@ -10063,7 +10063,7 @@ IDELAYCTRL IDELAYCTRL(
 	.REFCLK(clk200_clk),
 	.RST(main_ic_reset)
 );
-
+wire ddram_clk_tq;
 OSERDESE2 #(
 	.DATA_RATE_OQ("DDR"),
 	.DATA_RATE_TQ("BUF"),
@@ -10083,11 +10083,13 @@ OSERDESE2 #(
 	.D8(1'd1),
 	.OCE(1'd1),
 	.RST(sys_rst),
-	.OQ(main_a7ddrphy_sd_clk_se_nodelay)
+	.OQ(main_a7ddrphy_sd_clk_se_nodelay),
+	.TQ(ddram_clk_tq)
 );
 
-OBUFDS OBUFDS(
+OBUFTDS OBUFDS(
 	.I(main_a7ddrphy_sd_clk_se_nodelay),
+	.T(ddram_clk_tq),
 	.O(ddram_clk_p),
 	.OB(ddram_clk_n)
 );
