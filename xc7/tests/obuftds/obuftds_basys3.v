@@ -112,8 +112,6 @@ oserdes_1
 // OBUFTDS
 
 OBUFTDS # (
-  .IOSTANDARD("DIFF_SSTL135"),
-  .SLEW("FAST")
 ) obuftds_0 (
   .I(buf_i[0]),
   .T(buf_t[0]),
@@ -121,8 +119,6 @@ OBUFTDS # (
   .OB(diff_n[0]) // LED3
 );
 OBUFTDS # (
-  .IOSTANDARD("DIFF_SSTL135"),
-  .SLEW("FAST")
 ) obuftds_1 (
   .I(buf_i[1]),
   .T(buf_t[1]),

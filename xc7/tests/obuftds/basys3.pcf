@@ -15,7 +15,7 @@ set_io sw[6] W14
 set_io sw[7] W13
 
 # led[0:15] correspond with LD0-LD15 on the basys3
-set_io diff_p[0] U16
-set_io diff_n[0] E19
-set_io diff_p[1] U19
-set_io diff_n[1] V19
+set_io diff_p[0] U19
+set_io diff_n[0] V19
+set_io diff_p[1] V13
+set_io diff_n[1] V14

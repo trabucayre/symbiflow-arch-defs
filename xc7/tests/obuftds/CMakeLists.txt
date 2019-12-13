@@ -3,7 +3,7 @@ add_file_target(FILE basys3.pcf)
 
 add_fpga_target(
   NAME obuftds_basys3
-  BOARD basys3-bottom
+  BOARD basys3-full
   SOURCES obuftds_basys3.v
   INPUT_IO_FILE basys3.pcf
   EXPLICIT_ADD_FILE_TARGET
