@@ -567,6 +567,7 @@ function(DEFINE_DEVICE)
         --write_rr_graph ${OUT_RRXML_VIRT}
         --outfile_prefix ${DEVICE}_${PACKAGE}
         --pack
+        --pack_verbosity 100
         --place
       COMMAND
         ${CMAKE_COMMAND} -E copy vpr_stdout.log

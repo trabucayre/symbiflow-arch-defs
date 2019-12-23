@@ -254,6 +254,7 @@ function(VPR_TEST_PB_TYPE)
       ${CMAKE_CURRENT_BINARY_DIR}/${VPR_TEST_PB_TYPE_NAME}.test.eblif
       --echo_file on
       --pack
+      --pack_verbosity 100
       --place
       --route
       --device device
