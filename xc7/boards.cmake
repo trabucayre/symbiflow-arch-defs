@@ -77,3 +77,10 @@ add_xc7_board(
   PART xc7z020clg484-1
 )
 
+add_xc7_board(
+  BOARD microzed-full
+  DEVICE xc7z020
+  PACKAGE test
+  PART xc7z020clg484-1
+)
+
