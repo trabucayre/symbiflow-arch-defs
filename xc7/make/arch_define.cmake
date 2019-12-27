@@ -1,3 +1,5 @@
+include(install.cmake)
+
 function(ADD_XC7_ARCH_DEFINE)
   set(options)
   set(oneValueArgs ARCH YOSYS_SYNTH_SCRIPT YOSYS_CONV_SCRIPT)
@@ -104,5 +106,11 @@ function(ADD_XC7_ARCH_DEFINE)
     RR_GRAPH_EXT ".xml"
     ROUTE_CHAN_WIDTH 500
   )
+
+  define_xc7_toolchain_target(
+      ARCH ${ARCH}
+      BIT_TO_BIN xc7frames2bit
+      CONV_SCRIPT ${YOSYS_CONV_SCRIPT}
+      SYNTH_SCRIPT ${YOSYS_SYNTH_SCRIPT})
 
 endfunction()
