@@ -106,7 +106,8 @@ function(DEFINE_XC7_PINMAP_CSV_INSTALL_TARGET)
 
   get_target_property(USE_ROI ${DEVICE} USE_ROI)
   if(USE_ROI OR USE_ROI STREQUAL "USE_ROI-NOTFOUND")
-    return()
+    # return()
+    message(STATUS "Generating pinmap for ${DEVICE}-${PACKAGE} type: ${DEVICE_TYPE} with ROI")
   endif()
 
   get_target_property_required(PINMAP ${BOARD} PINMAP)
