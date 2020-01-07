@@ -70,6 +70,12 @@ def main():
             elif port['name'].startswith('din['):
                 is_clock = False
                 port_type = 'output'
+            elif port['name'].startswith('clko'):
+                port_type = 'output'
+                is_clock = True
+            elif port['name'].startswith('clki'):
+                port_type = 'input'
+                is_clock = True
             elif port['name'].startswith('clk'):
                 port_type = 'output'
                 is_clock = True
