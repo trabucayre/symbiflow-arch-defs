@@ -52,6 +52,7 @@ def main():
 
         # TODO: Handle what happens when multiple IO's are at the same x,
         # y location?
+        print('synth_tile: {}'.format(synth_tile))
         assert len(synth_tile['pins']) == 1
         for pin in synth_tile['pins']:
             assert pin['pad'] not in pads
