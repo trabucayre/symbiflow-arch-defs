@@ -255,6 +255,7 @@ add_dependencies(all_xc7_demos
     all_basys3_bin
     all_basys3-full_bin
     all_zybo_bin
+    all_zybo-full_bin
     )
 endif()
 
