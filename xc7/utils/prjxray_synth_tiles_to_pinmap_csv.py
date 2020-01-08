@@ -52,8 +52,10 @@ def main():
 
         # TODO: Handle what happens when multiple IO's are at the same x,
         # y location?
+        print('synth_tiles: {}'.format(args.synth_tiles))
         print('synth_tile: {}'.format(synth_tile))
         #assert len(synth_tile['pins']) == 1
+        cnt = 0
         for pin in synth_tile['pins']:
             assert pin['pad'] not in pads
 
@@ -63,12 +65,14 @@ def main():
             pads.add(pin['pad'])
             x = synth_tile['loc'][0]
             y = synth_tile['loc'][1]
+            z = cnt
+            cnt = cnt + 1
             writer.writerow(
                 dict(
                     name=pin['pad'],
                     x=x,
                     y=y,
-                    z=0,
+                    z=z,
                     is_clock=1 if pin['is_clock'] else 0,
                     is_input=0 if pin['port_type'] == 'input' else 1,
                     is_output=0 if pin['port_type'] == 'output' else 1,
