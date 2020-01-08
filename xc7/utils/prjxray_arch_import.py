@@ -729,7 +729,7 @@ def main():
         for _, tile_info in synth_tiles['tiles'].items():
             assert tuple(tile_info['loc']) not in synth_loc_map
 
-            assert len(tile_info['pins']) == 1
+            #assert len(tile_info['pins']) == 1
 
             vpr_tile_type = synth_tile_map[tile_info['pins'][0]['port_type']]
 

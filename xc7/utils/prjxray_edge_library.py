@@ -2202,7 +2202,7 @@ def create_edges(args):
                 tile_name = grid.tilename_at_loc(loc)
 
                 if tile_name in synth_tiles['tiles']:
-                    assert len(synth_tiles['tiles'][tile_name]['pins']) == 1
+                    #assert len(synth_tiles['tiles'][tile_name]['pins']) == 1
                     for pin in synth_tiles['tiles'][tile_name]['pins']:
                         if pin['port_type'] not in ['input', 'output']:
                             continue

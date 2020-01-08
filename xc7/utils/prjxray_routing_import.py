@@ -725,7 +725,7 @@ def add_synthetic_edges(conn, graph, node_mapping, grid, synth_tiles):
     delayless_switch = graph.get_switch_id('__vpr_delayless_switch__')
 
     for tile_name, synth_tile in synth_tiles['tiles'].items():
-        assert len(synth_tile['pins']) == 1
+        #assert len(synth_tile['pins']) == 1
         for pin in synth_tile['pins']:
             if pin['port_type'] in ['input', 'output']:
                 wire_pkey = get_wire_pkey(conn, tile_name, pin['wire'])
