@@ -1023,6 +1023,7 @@ function(ADD_FPGA_TARGET)
       COMMAND
         ${CMAKE_COMMAND} -E env
           symbiflow-arch-defs_SOURCE_DIR=${symbiflow-arch-defs_SOURCE_DIR}
+          symbiflow-arch-defs_BINARY_DIR=${symbiflow-arch-defs_BINARY_DIR}
           OUT_JSON=${OUT_JSON_SYNTH}
           OUT_SYNTH_V=${OUT_SYNTH_V}
           ${ADD_FPGA_TARGET_DEFINES}
