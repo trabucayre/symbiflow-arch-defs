@@ -421,6 +421,7 @@ function(DEFINE_DEVICE)
   #   ARCH <arch>
   #   DEVICE_TYPE <device_type>
   #   PACKAGES <list of packages>
+  #   [WIRE_EBLIF <a dummy design eblif file>
   #   [CACHE_PLACE_DELAY]
   #   [CACHE_LOOKAHEAD]
   #   [CACHE_ARGS <args>]
@@ -432,6 +433,9 @@ function(DEFINE_DEVICE)
   # Creates dummy targets <arch>_<device>_<package>_rrxml_virt and
   # <arch>_<device>_<package>_rrxml_virt  that generates the the virtual and
   # real rr_graph for a specific device and package.
+  #
+  # The WIRE_EBLIF specifies a dummy design file to use. If not given then
+  # the default "common/wire.eblif" is used.
   #
   # To prevent VPR from recomputing the place delay matrix and/or lookahead,
   # CACHE_PLACE_DELAY and CACHE_LOOKAHEAD options may be specified.
@@ -447,7 +451,7 @@ function(DEFINE_DEVICE)
   # WARNING: Using a different place delay or lookahead algorithm will result
   # in an invalid cache.
   set(options CACHE_LOOKAHEAD CACHE_PLACE_DELAY)
-  set(oneValueArgs DEVICE ARCH DEVICE_TYPE PACKAGES)
+  set(oneValueArgs DEVICE ARCH DEVICE_TYPE PACKAGES WIRE_EBLIF)
   set(multiValueArgs RR_PATCH_DEPS RR_PATCH_EXTRA_ARGS CACHE_ARGS)
   cmake_parse_arguments(
     DEFINE_DEVICE
@@ -467,6 +471,12 @@ function(DEFINE_DEVICE)
       PROPERTIES ${ARG} ${DEFINE_DEVICE_${ARG}}
     )
   endforeach()
+
+  if("${DEFINE_DEVICE_WIRE_EBLIF}" STREQUAL "")
+    set(WIRE_EBLIF ${symbiflow-arch-defs_SOURCE_DIR}/common/wire.eblif)
+  else()
+    set(WIRE_EBLIF ${DEFINE_DEVICE_WIRE_EBLIF})
+  endif()
 
   get_target_property_required(
     RR_PATCH_TOOL ${DEFINE_DEVICE_ARCH} RR_PATCH_TOOL
@@ -513,14 +523,14 @@ function(DEFINE_DEVICE)
     add_custom_command(
       OUTPUT ${OUT_RRXML_VIRT} rr_graph_${DEVICE}_${PACKAGE}.virt.out
       DEPENDS
-        ${symbiflow-arch-defs_SOURCE_DIR}/common/wire.eblif
+        ${WIRE_EBLIF}
         ${DEVICE_MERGED_FILE} ${DEVICE_MERGED_FILE_TARGET}
         ${QUIET_CMD} ${QUIET_CMD_TARGET}
         ${VPR} ${VPR_TARGET} ${DEFINE_DEVICE_DEVICE_TYPE}
       COMMAND
         ${QUIET_CMD} ${VPR} ${DEVICE_MERGED_FILE}
         --device ${DEVICE_FULL}
-        ${symbiflow-arch-defs_SOURCE_DIR}/common/wire.eblif
+        ${WIRE_EBLIF}
         --place_algorithm bounding_box
         --enable_timing_computations off
         --route_chan_width 6
@@ -612,7 +622,7 @@ function(DEFINE_DEVICE)
       add_custom_command(
         OUTPUT ${OUT_RRXML_REAL}.cache ${OUTPUTS}
         DEPENDS
-            ${symbiflow-arch-defs_SOURCE_DIR}/common/wire.eblif
+            ${WIRE_EBLIF}
             ${VPR} ${VPR_TARGET}
             ${QUIET_CMD} ${QUIET_CMD_TARGET}
             ${DEFINE_DEVICE_DEVICE_TYPE}
@@ -621,7 +631,7 @@ function(DEFINE_DEVICE)
             ${PYTHON3} ${symbiflow-arch-defs_SOURCE_DIR}/utils/check_cache.py ${OUT_RRXML_REAL} ${OUT_RRXML_REAL}.cache ${OUTPUTS} || (
             ${QUIET_CMD} ${VPR} ${DEVICE_MERGED_FILE}
             --device ${DEVICE_FULL}
-            ${symbiflow-arch-defs_SOURCE_DIR}/common/wire.eblif
+            ${WIRE_EBLIF}
             --read_rr_graph ${OUT_RRXML_REAL}
             --outfile_prefix ${DEVICE}_${PACKAGE}_cache
             --pack
