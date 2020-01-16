@@ -137,6 +137,7 @@ add_conda_pip(
 
 get_target_property_required(PYTHON3 env PYTHON3)
 get_target_property(PYTHON3_TARGET env PYTHON3_TARGET)
+get_target_property(LIBICONV_TARGET env LIBICONV_TARGET)
 
 add_thirdparty_package(
   NAME sdf_timing
@@ -149,7 +150,7 @@ add_thirdparty_package(
   NAME v2x
   BUILD_INSTALL_COMMAND "cd ${symbiflow-arch-defs_SOURCE_DIR}/third_party/python-symbiflow-v2x && ${PYTHON3} setup.py develop"
   NO_EXE
-  DEPENDS ${PYTHON3_TARGET} libiconv
+  DEPENDS ${PYTHON3_TARGET} ${LIBICONV_TARGET}
 )
 
 include(common/cmake/image_gen.cmake)
