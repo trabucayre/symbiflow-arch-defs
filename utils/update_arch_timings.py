@@ -6,7 +6,13 @@ from sdf_timing.utils import get_scale_seconds
 from lib.pb_type import get_pb_type_chain
 import re
 import os
+import sys
 
+# Set to true to print debugging info.
+DEBUG = True
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 def mergedicts(source, destination):
     """This function recursively merges two dictionaries:
@@ -65,10 +71,19 @@ def get_cell_types_and_instances(bel, location, site, bels):
        is found a list of celltypes and bel instances is returned,
        None otherwise"""
     if site not in bels:
+        if DEBUG:
+            eprint("Site '{}' not found among '{}'".format(
+                site, ", ".join(bels.keys())))
         return None
     if bel not in bels[site]:
+        if DEBUG:
+            eprint("Bel '{}' not found among '{}'".format(
+                bel, ", ".join(bels[site].keys())))
         return None
     if location not in bels[site][bel]:
+        if DEBUG:
+            eprint("Location '{}' not found among '{}'".format(
+                location, ", ".join(bels[site][bel].keys())))
         return None
 
     # Generate a list of tuples (celltype, instance)
@@ -163,8 +178,9 @@ def main():
             tmp = sdfparse.parse(fp.read())
             mergedicts(tmp, timings)
 
-    with open("/tmp/dump.json", 'w') as fp:
-        json.dump(timings, fp, indent=4)
+    if DEBUG:
+        with open("/tmp/dump.json", 'w') as fp:
+            json.dump(timings, fp, indent=4)
 
     for dm in root_element.iter('delay_matrix'):
         if dm.attrib['type'] == 'max':
