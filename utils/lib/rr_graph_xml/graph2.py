@@ -74,11 +74,11 @@ def graph_from_xml(input_file_name, progressbar=None, filter_nodes=True):
         # Switch timing
         if path == "rr_graph/switches/switch" and element.tag == "timing":
             switch_timing = graph2.SwitchTiming(
-                r=float(element.attrib['R']),
-                c_in=float(element.attrib['Cin']),
-                c_out=float(element.attrib['Cout']),
-                c_internal=float(element.attrib.get('Cinternal', 0)),
-                t_del=float(element.attrib['Tdel']),
+                r=float(element.get('R', 0.0)),
+                c_in=float(element.get('Cin', 0.0)),
+                c_out=float(element.get('Cout', 0.0)),
+                c_internal=float(element.get('Cinternal', 0.0)),
+                t_del=float(element.get('Tdel', 0.0)),
             )
 
         # Switch sizing
