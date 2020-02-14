@@ -541,6 +541,7 @@ function(DEFINE_DEVICE)
         --pack
         --pack_verbosity 100
         --place
+        --allow_dangling_combinational_nodes on
       COMMAND
         ${CMAKE_COMMAND} -E copy vpr_stdout.log
         rr_graph_${DEVICE}_${PACKAGE}.virt.out
