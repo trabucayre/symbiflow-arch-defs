@@ -32,6 +32,7 @@ function(DEFINE_ARCH)
   #    HLC_TO_BIT_CMD <command to run HLC_TO_BIT>
   #    FASM_TO_BIT <path to FASM to bitstream converter>
   #    FASM_TO_BIT_CMD <command to run FASM_TO_BIT>
+  #    FASM_TO_BIT_DEPS <list of dependencies for FASM_TO_BIT_CMD>
   #    BIT_TO_V <path to bitstream to verilog converter>
   #    BIT_TO_V_CMD <command to run BIT_TO_V>
   #    BIT_TO_BIN <path to bitstream to binary>
@@ -130,7 +131,14 @@ function(DEFINE_ARCH)
     RR_GRAPH_EXT
     ROUTE_CHAN_WIDTH
   )
-  set(multiValueArgs CELLS_SIM VPR_ARCH_ARGS)
+
+  set(
+    multiValueArgs
+    CELLS_SIM
+    VPR_ARCH_ARGS
+    FASM_TO_BIT_DEPS
+  )
+
   cmake_parse_arguments(
     DEFINE_ARCH
     "${options}"
@@ -204,9 +212,11 @@ function(DEFINE_ARCH)
 
   if(${DEFINE_ARCH_USE_FASM})
     list(APPEND DISALLOWED_ARGS ${HLC_BIT_ARGS})
+    list(APPEND OPTIONAL_ARGS FASM_TO_BIT_DEPS)
     list(APPEND BIT_ARGS ${FASM_BIT_ARGS})
   else()
     list(APPEND DISALLOWED_ARGS ${FASM_BIT_ARGS})
+    list(APPEND DISALLOWED_ARGS FASM_TO_BIT_DEPS)
     list(APPEND BIT_ARGS ${HLC_BIT_ARGS})
   endif()
 
@@ -1027,6 +1037,8 @@ function(ADD_FPGA_TARGET)
     append_file_dependency(SOURCE_FILES_DEPS ${SRC})
   endforeach()
 
+  get_cells_sim_path(PATH_TO_CELLS_SIM ${ARCH})
+
   if(NOT ${ADD_FPGA_TARGET_NO_SYNTHESIS})
     set(COMPLETE_YOSYS_SYNTH_SCRIPT "tcl ${YOSYS_SYNTH_SCRIPT}")
 
@@ -1037,7 +1049,7 @@ function(ADD_FPGA_TARGET)
 
     add_custom_command(
       OUTPUT ${OUT_JSON_SYNTH} ${OUT_SYNTH_V}
-      DEPENDS ${SOURCE_FILES} ${SOURCE_FILES_DEPS}
+      DEPENDS ${SOURCE_FILES} ${SOURCE_FILES_DEPS} ${PATH_TO_CELLS_SIM}
               ${YOSYS} ${YOSYS_TARGET} ${QUIET_CMD} ${QUIET_CMD_TARGET}
               ${YOSYS_SYNTH_SCRIPT}
       COMMAND
@@ -1414,18 +1426,27 @@ function(ADD_FPGA_TARGET)
     if(${USE_FASM})
       get_target_property_required(FASM_TO_BIT ${ARCH} FASM_TO_BIT)
       get_target_property_required(FASM_TO_BIT_CMD ${ARCH} FASM_TO_BIT_CMD)
+      get_target_property(FASM_TO_BIT_DEPS ${ARCH} FASM_TO_BIT_DEPS)
+      if ("${FASM_TO_BIT_DEPS}" STREQUAL "FASM_TO_BIT_DEPS-NOTFOUND")
+        set(FASM_TO_BIT_DEPS "")
+      endif()
       get_target_property(FASM_TO_BIT_EXTRA_ARGS ${BOARD} FASM_TO_BIT_EXTRA_ARGS)
       if ("${FASM_TO_BIT_EXTRA_ARGS}" STREQUAL "FASM_TO_BIT_EXTRA_ARGS-NOTFOUND")
         set(FASM_TO_BIT_EXTRA_ARGS "")
       endif()
+
       get_target_property_required(PYTHON3 env PYTHON3)
+
+      set(BITSTREAM_DEPS ${OUT_FASM} ${FASM_TO_BIT} ${FASM_TO_BIT_DEPS})
+
       string(CONFIGURE ${FASM_TO_BIT_CMD} FASM_TO_BIT_CMD_FOR_TARGET)
       separate_arguments(
         FASM_TO_BIT_CMD_FOR_TARGET_LIST UNIX_COMMAND ${FASM_TO_BIT_CMD_FOR_TARGET}
       )
+
       add_custom_command(
         OUTPUT ${OUT_BITSTREAM}
-        DEPENDS ${OUT_FASM} ${FASM_TO_BIT}
+        DEPENDS ${BITSTREAM_DEPS}
         COMMAND ${FASM_TO_BIT_CMD_FOR_TARGET_LIST}
       )
     else()
@@ -1512,7 +1533,6 @@ function(ADD_FPGA_TARGET)
         COMMAND ${BIT_TO_V_CMD_FOR_TARGET_LIST}
         DEPENDS ${BIT_TO_V} ${OUT_BITSTREAM} ${OUT_BIN}
         )
-
 
         add_output_to_fpga_target(${NAME} BIT_V ${OUT_LOCAL_REL}/${TOP}_bit.v)
         get_file_target(BIT_V_TARGET ${OUT_LOCAL_REL}/${TOP}_bit.v)
