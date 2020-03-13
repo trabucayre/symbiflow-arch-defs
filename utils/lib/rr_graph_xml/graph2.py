@@ -110,8 +110,8 @@ def graph_from_xml(input_file_name, progressbar=None, filter_nodes=True, load_ed
         # Segment timing
         if path == "rr_graph/segments/segment" and element.tag == "timing":
             segment_timing = graph2.SegmentTiming(
-                r_per_meter=float(element.attrib['R_per_meter']),
-                c_per_meter=float(element.attrib['C_per_meter']),
+                r_per_meter=float(element.get('R_per_meter', 0.0)),
+                c_per_meter=float(element.get('C_per_meter', 0.0)),
             )
 
         # Segment
