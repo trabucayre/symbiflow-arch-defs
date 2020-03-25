@@ -2,16 +2,16 @@
 
 ## Quickstart guide
 
-### 1. Installation of Yosys with QuickLogic support
+### 1. Yosys with QuickLogic support installation
 
-First, download the sources from the Antmicro Yosys fork:
+First, download the sources from the Antmicro's Yosys fork:
 
 ```bash
 git clone https://github.com/antmicro/yosys.git -b quicklogic quicklogic-yosys
 cd quicklogic-yosys
 ```
 
-Then build Yosys with the following commands:
+Build Yosys with the following commands:
 
 ```bash
 cd yosys
@@ -22,13 +22,13 @@ sudo make install
 
 This will install Yosys into your `/usr/bin/` directory.
 
-Note: If you want to build Yosys using clang then replace `make config-gcc` with `make config-clang`.
+Note: If you want to build Yosys using clang, replace `make config-gcc` with `make config-clang`.
 
-Note: Once the changes in Yosys regarding QuickLogic are added to mainstream, this step will be unnecessary, since everything will be fetched by Anaconda.
+Note: Once the QuickLogic specific changes in Yosys are merged with Yosys used by mainline Symbilow, this step will be unnecessary.
 
 ### 2. SymbiFlow installation
 
-Clone the SymbiFlow repository, make sure to use the `master+quicklogic` branch:
+Clone the SymbiFlow repository, make sure you're using `master+quicklogic` branch:
 
 ```bash
 git clone https://github.com/antmicro/symbiflow-arch-defs -b master+quicklogic
@@ -45,9 +45,9 @@ cd build && make all_conda
 
 ### 3. Generate a bitstream for a sample design
 
-Once the SymbiFlow environment is set you can perform the implementation (synthesis, placement and routing) of FPAG designs.
+Once the SymbiFlow environment is set up, you can perform the implementation (synthesis, placement and routing) of an example FPGA designs.
 
-Go to the `quicklogic/tests` directory and choose a design you want to implement:
+Go to the `quicklogic/tests` directory and choose a design you want to implement e.g:
 
 ```bash
 cd quicklogic/tests/btn_counter
@@ -68,25 +68,28 @@ Currently designs that work on hardware are:
 	- soc_clocks
 	- soc_litex_pwm
 
-For details for each of the test design please refer to its `README.md` file located in its source directory.
+For details of each of the test design please refer to its `README.md` file.
 
 ### 4. Programming the EOS S3 SoC
 
-There are helper scripts integrated with the flow that can automatically configure the IOMUX of the SoC so that all top-level IO ports of the design are routed to the physical pads of the chip.
+To ease up the programming process helper scripts were integrated with the flow.
+The scripts can automatically configure the IOMUX of the SoC so that all top-level IO ports of the design are routed to the physical pads of the chip.
 
-In order to generate the programming script build the following target:
+In order to generate the programming script, build the following target:
 
 ```bash
 make counter-ql-chandalar_jlink
 ```
 
-The script will contain the bitstream as well as IOMUX configuration.
+The script will contain both bitstream and IOMUX configuration.
 
 ## Naming convention
 
 The naming convention of all build targets is: `<design_name>-<board_name>_<stage_name>`
 
-The `<design_name>` corresponds to the name of the design. The `<board_name>` defines the board that the design is targetted for. The last part `<stage_name>` defines the last stage of the flow that is to be executed.
+The `<design_name>` corresponds to the name of the design.
+The `<board_name>` defines the board that the design is targetted for, possible values are `ql-chandalar` and `ql-jibob4`
+The last part `<stage_name>` defines the last stage of the flow that is to be executed.
 
 The most important stages are:
 
@@ -109,49 +112,58 @@ Executing a particular stage implies that all stages before it will be executed 
 
 ## Adding new designs to SymbiFlow
 
-1\. Create a subfolder for your design under the `quicklogic/tests` folder.
+To to add a new design to the flow, and use it as a test follow the guide:
 
-2\. Add inclusion of the folder in the `quicklogic/tests/CMakeLists.txt` by adding the following line to it:
+1. Create a subfolder for your design under the `quicklogic/tests` folder.
 
-```plaintext
-add_subdirectory(<your_directory_name>)
-```
+1. Add inclusion of the folder in the `quicklogic/tests/CMakeLists.txt` by adding the following line to it:
 
-3\. Add a `CMakeLists.txt` file to your design. Specify your design settings inside it:
+    ```plaintext
+    add_subdirectory(<your_directory_name>)
+    ```
 
-```plaintext
-add_fpga_target(
-  NAME            <your_design_name>
-  BOARD           <target_board_name>
-  SOURCES         <verilog sources list>
-  INPUT_IO_FILE   <PCF file with IO constraints>
-  SDC_FILE        <SDC file with timing constraints>
-  )
-```
+1. Add a `CMakeLists.txt` file to your design. Specify your design settings inside it:
 
-The design name can be anything. For available board names please refer to the `quicklogic/boards.cmake` file. Input IO constraints have to be given in the *PCF* format. The *SDC* file argument is optional. 
+    ```plaintext
+    add_fpga_target(
+      NAME            <your_design_name>
+      BOARD           <target_board_name>
+      SOURCES         <verilog sources list>
+      INPUT_IO_FILE   <PCF file with IO constraints>
+      SDC_FILE        <SDC file with timing constraints>
+      )
+    ```
 
-Please also refer to CMake files for existing designs.
+    The design name can be anything. For available board names please refer to the `quicklogic/boards.cmake` file. Input IO constraints have to be given in the *PCF* format. The *SDC* file argument is optional. 
+    Please also refer to CMake files for existing designs.
+    All the files passed to `add_fpga_target` have to be added to the flow with `add_file_target` e.g:
+    
+    ```plaintext
+    add_file_target(FILE btn_counter.v SCANNER_TYPE verilog)
+    add_file_target(FILE chandalar-top.pcf)
+    ```
+    
+    The verilog scanner will automatically add all the verilog dependecies explicitely included in the added file.
+    
+1. Once this is done go back to the SymbiFlow root directory and re-run the make env command to update build targets:
 
-4\. Once this is done go back to the SymbiFlow root directory and re-run the make env command to update build targets:
+   ```bash
+   make env
+   ```
 
-```bash
-make env
-```
+1. Now enter the build directory of your project and run the appropriate target as described:
 
-5\. Now enter the build directory of your project and run the appropriate target as described:
+   ```bash
+   cd build/quicklogic/tests/<your_directory_name>
+   make <your_design_name>-<target_board_name>_bit
+   ```
 
-```bash
-cd build/quicklogic/tests/<your_directory_name>
-make <your_design_name>-<target_board_name>_bin
-```
+## Known limitations
 
-## Limitations
+SymbiFlow support for Quicklogic FPGAs is currently under heavy development. These are known limitations of the toolchain:
 
-SymbiFlow support for Quicklogic FPGAs is currently under heavy development. These are the limitations of the toolchain in its current form:
+1. No support for the global clock network yet. Clock signal is routed to *QCK* inputs of *LOGIC* cells via the ordinary routing network.
 
-1\. No support for the global clock network yet. Clock signal is routed to *QCK* inputs of *LOGIC* cells via the ordinary routing network.
+1. The direct connection between the "TBS" mux and the flip-flop inside the *LOGIC* cell cannot be used. The signal has to be routed around through the switchbox from the *CZ* pin to the *QDI* pin.
 
-2\. The direct connection between the "TBS" mux and the flip-flop inside the *LOGIC* cell cannot be used. The signal has to be routed around through the switchbox from the *CZ* pin to the *QDI* pin.
-
-3\. Only a single *LUT2* or *LUT3* can be packed into a LOGIC cell.
+1. Only a single *LUT2* or *LUT3* can be packed into a LOGIC cell.
