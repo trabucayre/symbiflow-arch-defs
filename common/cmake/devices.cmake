@@ -1685,7 +1685,8 @@ function(ADD_FPGA_TARGET)
         )
 
         get_target_property(BIT_TO_V_EXTRA_ARGS ${BOARD} BIT_TO_V_EXTRA_ARGS)
-        if (${BIT_TO_V_EXTRA_ARGS} STREQUAL NOTFOUND)
+        if (${BIT_TO_V_EXTRA_ARGS} STREQUAL BIT_TO_V_EXTRA_ARGS-NOTFOUND OR
+            ${BIT_TO_V_EXTRA_ARGS} STREQUAL NOTFOUND)
           set(BIT_TO_V_EXTRA_ARGS "")
         endif()
 
