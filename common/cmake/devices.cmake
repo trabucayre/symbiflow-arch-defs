@@ -1116,6 +1116,19 @@ function(ADD_FPGA_TARGET)
     list(APPEND CELLS_SIM_DEPS ${CELL_TARGET})
   endforeach()
 
+  set(YOSYS_IO_DEPS "")
+
+  if(NOT ${ADD_FPGA_TARGET_INPUT_IO_FILE} STREQUAL "")
+    get_target_property_required(PINMAP_FILE ${BOARD} PINMAP)
+
+    get_file_location(INPUT_IO_FILE ${ADD_FPGA_TARGET_INPUT_IO_FILE})
+    get_file_location(PINMAP ${PINMAP_FILE})
+
+    append_file_dependency(YOSYS_IO_DEPS ${ADD_FPGA_TARGET_INPUT_IO_FILE})
+    append_file_dependency(YOSYS_IO_DEPS ${PINMAP_FILE})
+
+  endif()
+
   if(NOT ${ADD_FPGA_TARGET_NO_SYNTHESIS})
     set(COMPLETE_YOSYS_SYNTH_SCRIPT "tcl ${YOSYS_SYNTH_SCRIPT}")
 
@@ -1135,7 +1148,7 @@ function(ADD_FPGA_TARGET)
     add_custom_command(
       OUTPUT ${OUT_JSON_SYNTH} ${OUT_SYNTH_V} ${OUT_FASM_EXTRA}
       DEPENDS ${SOURCE_FILES} ${SOURCE_FILES_DEPS} ${INPUT_XDC_FILE} ${CELLS_SIM_DEPS}
-              ${YOSYS} ${YOSYS_TARGET} ${QUIET_CMD} ${QUIET_CMD_TARGET}
+              ${YOSYS} ${YOSYS_TARGET} ${QUIET_CMD} ${QUIET_CMD_TARGET} ${YOSYS_IO_DEPS}
               ${YOSYS_SYNTH_SCRIPT}
       COMMAND
         ${CMAKE_COMMAND} -E make_directory ${OUT_LOCAL}
@@ -1150,6 +1163,8 @@ function(ADD_FPGA_TARGET)
           PART_JSON=${PART_JSON}
           INPUT_XDC_FILE=${INPUT_XDC_FILE}
           USE_ROI=${USE_ROI}
+          PCF_FILE=${INPUT_IO_FILE}
+          PINMAP_FILE=${PINMAP}
           ${ADD_FPGA_TARGET_DEFINES}
           ${QUIET_CMD} ${YOSYS} -p "${COMPLETE_YOSYS_SYNTH_SCRIPT}" -l ${OUT_JSON_SYNTH}.log ${SOURCE_FILES}
       COMMAND
@@ -1348,7 +1363,6 @@ function(ADD_FPGA_TARGET)
     endif()
 
     get_target_property_required(PYTHON3 env PYTHON3)
-    get_target_property_required(PINMAP_FILE ${BOARD} PINMAP)
 
 
     # Add complete dependency chain
@@ -1366,8 +1380,6 @@ function(ADD_FPGA_TARGET)
     set(OUT_CONSTR ${OUT_LOCAL}/${TOP}_constraints.place)
     set(OUT_CONSTR_REL ${OUT_LOCAL_REL}/${TOP}_constraints.place)
     set(OUT_NET ${OUT_LOCAL}/${TOP}.net)
-    get_file_location(INPUT_IO_FILE ${ADD_FPGA_TARGET_INPUT_IO_FILE})
-    get_file_location(PINMAP ${PINMAP_FILE})
 
     # Generate IO constraints
     string(CONFIGURE ${PLACE_TOOL_CMD} PLACE_TOOL_CMD_FOR_TARGET)
