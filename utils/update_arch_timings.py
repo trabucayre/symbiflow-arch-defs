@@ -12,7 +12,6 @@ import sys
 # in bels.json
 DEBUG = False
 
-
 def mergedicts(source, destination):
     """This function recursively merges two dictionaries:
        `source` into `destination"""
