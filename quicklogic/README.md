@@ -6,25 +6,27 @@
 
 First, download the sources from the Antmicro's Yosys fork:
 
+Note: Once the QuickLogic specific changes in Yosys are merged with Yosys used by mainline Symbilow, this step will be unnecessary.
+
 ```bash
 git clone https://github.com/antmicro/yosys.git -b quicklogic-rebased quicklogic-yosys
 cd quicklogic-yosys
 ```
 
-Build Yosys with the following commands:
+Build and install Yosys with the following commands:
 
 ```bash
 cd yosys
 make config-gcc
-make -j$(nproc)
-sudo make install
+make -j$(nproc) PREFIX=/opt/yosys
+sudo make install PREFIX=/opt/yosys
 ```
 
-This will install Yosys into your `/usr/local/bin/` directory.
+Note: Here the `PREFIX` parameter is specified to override the default installation directory prefix which is `/usr/local/`. If you want to install Yosys there then do not specify the `PREFIX` parameter.
+
+This will install the Yosys binary into your `/opt/yosys/bin/` directory.
 
 Note: If you want to build Yosys using clang, replace `make config-gcc` with `make config-clang`.
-
-Note: Once the QuickLogic specific changes in Yosys are merged with Yosys used by mainline Symbilow, this step will be unnecessary.
 
 Next, download necessary Yosys plugins from the `yosys-symbiflow-plugins` repository:
 
@@ -36,11 +38,10 @@ cd yosys-symbiflow-plugins
 Build and install the plugins using the commands:
 
 ```bash
-make
-sudo make install
+PATH=/opt/yosys/bin:$PATH make
 ```
 
-This will build and install the plugins to `/usr/local/share/yosys/plugins`.
+This will build and install the plugins to `/opt/yosys/share/yosys/plugins`.
 
 Note: Until the Yosys with Quicklogic support is available as a symbiflow Conda package the plugins have to be downloaded and installed manually.
 
@@ -50,13 +51,14 @@ Clone the SymbiFlow repository, make sure you're using `quicklogic-upstream-reba
 
 ```bash
 git clone https://github.com/antmicro/symbiflow-arch-defs -b quicklogic-upstream-rebase
+cd symbiflow-arch-defs
 ```
 
 Set up the environment:
 
 ```bash
-export YOSYS=/usr/local/bin/yosys
-# assuming default Yosys installation path
+export YOSYS=/opt/yosys/bin/yosys
+# Assuming Yosys installation prefix to be '/opt/yosys'
 make env
 cd build && make all_conda
 ```
@@ -68,7 +70,7 @@ Once the SymbiFlow environment is set up, you can perform the implementation (sy
 Go to the `quicklogic/tests` directory and choose a design you want to implement e.g:
 
 ```bash
-cd quicklogic/tests/btn_counter
+cd quicklogic/tests/counter
 make counter-ql-chandalar_bit
 ```
 
@@ -184,4 +186,4 @@ SymbiFlow support for Quicklogic FPGAs is currently under heavy development. The
 
 1. The direct connection between the "TBS" mux and the flip-flop inside the *LOGIC* cell cannot be used. The signal has to be routed around through the switchbox from the *CZ* pin to the *QDI* pin.
 
-1. Only a single *LUT2* or *LUT3* can be packed into a LOGIC cell.
+1. Similarly, the "TBS" mux is always statically configured so the output of the "top" part of the *C_FRAG* always goes to *TZ* while the output of the "bottom" part is always routed to *CZ*. This implies that each *LUT4* is broken down into 2x*LUT3* followed by a a 2:1 mux. The mux is always packed into an *F_FRAG*.
