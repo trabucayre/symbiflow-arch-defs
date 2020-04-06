@@ -16,7 +16,6 @@ add_fpga_target(
     aes_mix_columns.v
     aes_mix_single_column.v
     aes_pkg.v
-    aes_reg_pkg.v
     aes_reg_top.v
     aes_sbox_canright.v
     aes_sbox_lut.v
@@ -28,11 +27,9 @@ add_fpga_target(
     alert_handler_class.v
     alert_handler_esc_timer.v
     alert_handler_ping_timer.v
-    alert_handler_reg_pkg.v
     alert_handler_reg_top.v
     alert_handler_reg_wrap.v
     alert_handler.v
-    alert_pkg.v
     clkgen_xil7series.v
     debug_rom.v
     dm_csrs.v
@@ -42,8 +39,6 @@ add_fpga_target(
     dm_mem.v
     dm_pkg.v
     dm_sba.v
-    flash_ctrl_pkg.v
-    flash_ctrl_reg_pkg.v
     flash_ctrl_reg_top.v
     flash_ctrl.v
     flash_erase_ctrl.v
@@ -51,12 +46,9 @@ add_fpga_target(
     flash_phy.v
     flash_prog_ctrl.v
     flash_rd_ctrl.v
-    gpio_reg_pkg.v
     gpio_reg_top.v
     gpio.v
     hmac_core.v
-    hmac_pkg.v
-    hmac_reg_pkg.v
     hmac_reg_top.v
     hmac.v
     ibex_alu.v
@@ -72,19 +64,15 @@ add_fpga_target(
     ibex_load_store_unit.v
     ibex_multdiv_fast.v
     ibex_multdiv_slow.v
-    ibex_pkg.v
     ibex_pmp.v
     ibex_prefetch_buffer.v
     ibex_register_file_ff.v
-    nmi_gen_reg_pkg.v
     nmi_gen_reg_top.v
     nmi_gen.v
     padctl.v
-    pinmux_reg_pkg.v
     pinmux_reg_top.v
     pinmux.v
     pins_if.v
-    prim_alert_pkg.v
     prim_alert_receiver.v
     prim_alert_sender.v
     prim_arbiter_ppc.v
@@ -94,7 +82,6 @@ add_fpga_target(
     prim_clock_inverter.v
     prim_clock_mux2.v
     prim_diff_decode.v
-    prim_esc_pkg.v
     prim_esc_receiver.v
     prim_esc_sender.v
     prim_fifo_async.v
@@ -114,7 +101,6 @@ add_fpga_target(
     prim_lfsr.v
     prim_packer.v
     prim_pad_wrapper.v
-    prim_pkg.v
     prim_present.v
     prim_prince.v
     prim_pulse_sync.v
@@ -137,17 +123,13 @@ add_fpga_target(
     rv_core_ibex.v
     rv_dm.v
     rv_plic_gateway.v
-    rv_plic_reg_pkg.v
     rv_plic_reg_top.v
     rv_plic_target.v
     rv_plic.v
-    rv_timer_reg_pkg.v
     rv_timer_reg_top.v
     rv_timer.v
     sha2_pad.v
     sha2.v
-    spi_device_pkg.v
-    spi_device_reg_pkg.v
     spi_device_reg_top.v
     spi_device.v
     spi_fwmode.v
@@ -155,8 +137,6 @@ add_fpga_target(
     spi_fwm_txf_ctrl.v
     sram2tlul.v
     timer_core.v
-    tl_main_pkg.v
-    tl_peri_pkg.v
     tlul_adapter_host.v
     tlul_adapter_reg.v
     tlul_adapter_sram.v
@@ -166,23 +146,19 @@ add_fpga_target(
     tlul_err.v
     tlul_fifo_async.v
     tlul_fifo_sync.v
-    tlul_pkg.v
     tlul_socket_1n.v
     tlul_socket_m1.v
     top_earlgrey_nexysvideo.v
     top_earlgrey.v
     top_pkg.v
     uart_core.v
-    uart_reg_pkg.v
     uart_reg_top.v
     uart_rx.v
     uart_tx.v
     uart.v
-    usb_consts_pkg.v
     usbdev_flop_2syncpulse.v
     usbdev_iomux.v
     usbdev_linkstate.v
-    usbdev_reg_pkg.v
     usbdev_reg_top.v
     usbdev_usbif.v
     usbdev.v
