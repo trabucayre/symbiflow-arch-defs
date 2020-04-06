@@ -603,9 +603,7 @@ module ibex_core (
 		.data_valid_o(lsu_data_valid),
 		.load_err_o(lsu_load_err),
 		.store_err_o(lsu_store_err),
-		.busy_o(lsu_busy),
-		.illegal_insn_id_i(illegal_insn_id),
-		.instr_valid_id_i(instr_valid_id)
+		.busy_o(lsu_busy)
 	);
 	assign csr_wdata = alu_operand_a_ex;
 	assign csr_addr = sv2v_cast_12((csr_access ? alu_operand_b_ex[11:0] : 12'b0));

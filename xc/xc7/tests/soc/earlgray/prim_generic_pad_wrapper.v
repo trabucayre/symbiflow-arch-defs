@@ -25,9 +25,9 @@ module prim_generic_pad_wrapper (
 	wire out;
 	assign out = out_i ^ inv;
 	assign oe = oe_i & ((od & ~out) | ~od);
-	assign inout_io = (oe && (drv == STRONG_DRIVE) ? out : 1'bz);
-	assign inout_io = (oe && (drv == WEAK_DRIVE) ? out : 1'bz);
-	assign inout_io = pu;
-	assign inout_io = ~pd;
-	assign inout_io = (kp ? inout_io : 1'bz);
+	assign  inout_io = (oe && (drv == STRONG_DRIVE) ? out : 1'bz);
+	assign  inout_io = (oe && (drv == WEAK_DRIVE) ? out : 1'bz);
+	assign  inout_io = pu;
+	assign  inout_io = ~pd;
+	assign  inout_io = (kp ? inout_io : 1'bz);
 endmodule

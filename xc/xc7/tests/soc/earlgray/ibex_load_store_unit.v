@@ -23,9 +23,7 @@ module ibex_load_store_unit (
 	data_valid_o,
 	load_err_o,
 	store_err_o,
-	busy_o,
-	illegal_insn_id_i,
-	instr_valid_id_i
+	busy_o
 );
 	localparam [2:0] IDLE = 0;
 	localparam [2:0] WAIT_GNT_MIS = 1;
@@ -58,8 +56,6 @@ module ibex_load_store_unit (
 	output wire load_err_o;
 	output wire store_err_o;
 	output wire busy_o;
-	input wire illegal_insn_id_i;
-	input wire instr_valid_id_i;
 	wire [31:0] data_addr;
 	wire [31:0] data_addr_w_aligned;
 	reg [31:0] addr_last_q;
@@ -328,8 +324,4 @@ module ibex_load_store_unit (
 	assign load_err_o = data_or_pmp_err & ~data_we_q;
 	assign store_err_o = data_or_pmp_err & data_we_q;
 	assign busy_o = ls_fsm_cs != IDLE;
-	wire unused_instr_valid_id;
-	wire unused_illegal_insn_id;
-	assign unused_instr_valid_id = instr_valid_id_i;
-	assign unused_illegal_insn_id = illegal_insn_id_i;
 endmodule

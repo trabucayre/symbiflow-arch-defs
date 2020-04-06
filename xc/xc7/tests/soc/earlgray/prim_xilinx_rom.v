@@ -14,10 +14,9 @@ module prim_xilinx_rom (
 	output reg [Width - 1:0] dout_o;
 	output reg dvalid_o;
 	reg [Width - 1:0] mem [0:Depth - 1];
-	localparam MEM_FILE = "boot_rom_fpga_nexysvideo.vmem";
 	initial begin
-		$display("Initializing ROM from %s", MEM_FILE);
-		$readmemh(MEM_FILE, mem);
+		$display("Initializing ROM from %s", "boot_rom_fpga_nexysvideo.vmem");
+		$readmemh("boot_rom_fpga_nexysvideo.vmem", mem);
 	end
 	always @(posedge clk_i)
 		if (cs_i)

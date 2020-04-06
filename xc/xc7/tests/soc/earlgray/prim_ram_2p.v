@@ -52,22 +52,27 @@ module prim_ram_2p (
 			);
 		end
 		else if (Impl == ImplXilinx) begin : gen_mem_xilinx
-			prim_xilinx_ram_2p #(
+			prim_xilinx_ram_1p #(
 				.Width(Width),
 				.Depth(Depth)
-			) u_impl_xilinx(
+			) u_impl_xilinx_1(
 				.clk_a_i(clk_a_i),
-				.clk_b_i(clk_b_i),
 				.a_req_i(a_req_i),
 				.a_write_i(a_write_i),
 				.a_addr_i(a_addr_i),
 				.a_wdata_i(a_wdata_i),
-				.a_rdata_o(a_rdata_o),
-				.b_req_i(b_req_i),
-				.b_write_i(b_write_i),
-				.b_addr_i(b_addr_i),
-				.b_wdata_i(b_wdata_i),
-				.b_rdata_o(b_rdata_o)
+				.a_rdata_o(a_rdata_o)
+			);
+			prim_xilinx_ram_1p #(
+				.Width(Width),
+				.Depth(Depth)
+			) u_impl_xilinx_2(
+				.clk_a_i(clk_b_i),
+				.a_req_i(b_req_i),
+				.a_write_i(b_write_i),
+				.a_addr_i(b_addr_i),
+				.a_wdata_i(b_wdata_i),
+				.a_rdata_o(b_rdata_o)
 			);
 		end
 	endgenerate

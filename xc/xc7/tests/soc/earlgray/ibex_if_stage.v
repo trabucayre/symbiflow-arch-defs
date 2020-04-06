@@ -316,7 +316,7 @@ module ibex_if_stage (
 	localparam [5:0] EXC_CAUSE_IRQ_NM = {1'b1, 5'd31};
 	reg offset_in_init_d;
 	reg offset_in_init_q;
-	wire have_instr;
+	reg have_instr;
 	wire prefetch_busy;
 	reg branch_req;
 	reg [31:0] fetch_addr_n;
@@ -384,23 +384,26 @@ module ibex_if_stage (
 		offset_in_init_d = offset_in_init_q;
 		fetch_ready = 1'b0;
 		branch_req = 1'b0;
+		have_instr = 1'b0;
 		if (offset_in_init_q) begin
 			if (req_i) begin
 				branch_req = 1'b1;
 				offset_in_init_d = 1'b0;
 			end
 		end
-		else if (fetch_valid)
+		else if (fetch_valid) begin
+			have_instr = 1'b1;
 			if (req_i && if_id_pipe_reg_we) begin
 				fetch_ready = 1'b1;
 				offset_in_init_d = 1'b0;
 			end
+		end
 		if (pc_set_i) begin
+			have_instr = 1'b0;
 			branch_req = 1'b1;
 			offset_in_init_d = 1'b0;
 		end
 	end
-	assign have_instr = fetch_valid & ~(offset_in_init_q | pc_set_i);
 	assign pc_if_o = fetch_addr;
 	assign if_busy_o = prefetch_busy;
 	assign perf_imiss_o = ~fetch_valid | branch_req;

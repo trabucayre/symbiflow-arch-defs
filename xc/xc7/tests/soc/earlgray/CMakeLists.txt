@@ -33,7 +33,9 @@ add_fpga_target(
     alert_handler_reg_wrap.v
     alert_handler.v
     alert_pkg.v
+    boot_rom_fpga_nexysvideo.vmem
     clkgen_xil7series.v
+    CMakeLists.txt
     debug_rom.v
     dm_csrs.v
     dmi_cdc.v
@@ -63,7 +65,6 @@ add_fpga_target(
     ibex_compressed_decoder.v
     ibex_controller.v
     ibex_core.v
-    ibex_counters.v
     ibex_cs_registers.v
     ibex_decoder.v
     ibex_ex_block.v
@@ -85,6 +86,9 @@ add_fpga_target(
     pinmux_reg_top.v
     pinmux.v
     pins_if.v
+    pins_nexys_video.pcf
+    pins_nexys_video.sdc
+    pins_nexysvideo.xdc
     prim_alert_pkg.v
     prim_alert_receiver.v
     prim_alert_sender.v
@@ -132,6 +136,7 @@ add_fpga_target(
     prim_xilinx_clock_gating.v
     prim_xilinx_clock_mux2.v
     prim_xilinx_pad_wrapper.v
+    prim_xilinx_ram_1p.v
     prim_xilinx_ram_2p.v
     prim_xilinx_rom.v
     rv_core_ibex.v
@@ -154,6 +159,7 @@ add_fpga_target(
     spi_fwm_rxf_ctrl.v
     spi_fwm_txf_ctrl.v
     sram2tlul.v
+    sv2v.sh
     timer_core.v
     tl_main_pkg.v
     tl_peri_pkg.v
@@ -192,6 +198,7 @@ add_fpga_target(
     usb_fs_rx.v
     usb_fs_tx_mux.v
     usb_fs_tx.v
+    vivado-err.tcl
     xbar_main.v
     xbar_peri.v
   INPUT_IO_FILE pins_nexys_video.pcf

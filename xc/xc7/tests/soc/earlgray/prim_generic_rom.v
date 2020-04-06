@@ -24,9 +24,8 @@ module prim_generic_rom (
 			dvalid_o <= 1'b0;
 		else
 			dvalid_o <= cs_i;
-	localparam MEM_FILE = "boot_rom_fpga_nexysvideo.vmem";
 	initial begin
-		$display("Initializing ROM from %s", MEM_FILE);
-		$readmemh(MEM_FILE, mem);
+		$display("Initializing ROM from %s", "boot_rom_fpga_nexysvideo.vmem");
+		$readmemh("boot_rom_fpga_nexysvideo.vmem", mem);
 	end
 endmodule

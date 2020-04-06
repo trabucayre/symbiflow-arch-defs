@@ -386,8 +386,7 @@ module ibex_controller (
 	wire illegal_dret;
 	wire illegal_umode;
 	wire exc_req_lsu;
-	wire special_req_all;
-	wire special_req_branch;
+	wire special_req;
 	wire enter_debug_mode;
 	wire ebreak_into_debug;
 	wire handle_irq;
@@ -414,8 +413,7 @@ module ibex_controller (
 	assign illegal_insn_d = ((illegal_insn_i | illegal_dret) | illegal_umode) & (ctrl_fsm_cs != FLUSH);
 	assign exc_req_d = (((ecall_insn | ebrk_insn) | illegal_insn_d) | instr_fetch_err) & (ctrl_fsm_cs != FLUSH);
 	assign exc_req_lsu = store_err_i | load_err_i;
-	assign special_req_all = ((((mret_insn | dret_insn) | wfi_insn) | csr_pipe_flush) | exc_req_d) | exc_req_lsu;
-	assign special_req_branch = (illegal_insn_d | instr_fetch_err) & (ctrl_fsm_cs != FLUSH);
+	assign special_req = ((((mret_insn | dret_insn) | wfi_insn) | csr_pipe_flush) | exc_req_d) | exc_req_lsu;
 	assign enter_debug_mode = ((debug_req_i | (debug_single_step_i & instr_valid_i)) | trigger_match_i) & ~debug_mode_q;
 	assign ebreak_into_debug = (priv_mode_i == PRIV_LVL_M ? debug_ebreakm_i : (priv_mode_i == PRIV_LVL_U ? debug_ebreaku_i : 1'b0));
 	assign handle_irq = (~debug_mode_q & ~nmi_mode_q) & (irq_nm_i | (irq_pending_i & csr_mstatus_mie_i));
@@ -522,11 +520,11 @@ module ibex_controller (
 			DECODE: begin
 				pc_mux_o = PC_JUMP;
 				if (instr_valid_i) begin
-					if (special_req_all) begin
+					if (special_req) begin
 						ctrl_fsm_ns = FLUSH;
 						halt_if = 1'b1;
 					end
-					if ((branch_set_i || jump_set_i) && ~special_req_branch) begin
+					else if (branch_set_i || jump_set_i) begin
 						pc_set_o = 1'b1;
 						perf_tbranch_o = branch_set_i;
 						perf_jump_o = jump_set_i;
@@ -534,7 +532,7 @@ module ibex_controller (
 					if ((enter_debug_mode || handle_irq) && stall)
 						halt_if = 1'b1;
 				end
-				if (!stall && !special_req_all)
+				if (!stall && !special_req)
 					if (enter_debug_mode) begin
 						ctrl_fsm_ns = DBG_TAKEN_IF;
 						halt_if = 1'b1;

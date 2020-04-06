@@ -363,7 +363,7 @@ module ibex_cs_registers (
 	localparam [5:0] EXC_CAUSE_IRQ_EXTERNAL_M = {1'b1, 5'd11};
 	localparam [5:0] EXC_CAUSE_IRQ_NM = {1'b1, 5'd31};
 	localparam [1:0] MXL = 2'd1;
-	localparam [31:0] MISA_VALUE = (((((((((((0 << 0) | (1 << 2)) | (0 << 3)) | (sv2v_cast_32(RV32E) << 4)) | (0 << 5)) | (sv2v_cast_32(!RV32E) << 8)) | (sv2v_cast_32(RV32M) << 12)) | (0 << 13)) | (0 << 18)) | (1 << 20)) | (0 << 23)) | (sv2v_cast_32(MXL) << 30);
+	localparam [31:0] MISA_VALUE = (((((((((((0 << 0) | (1 << 2)) | (0 << 3)) | (sv2v_cast_32(RV32E) << 4)) | (0 << 5)) | (1 << 8)) | (sv2v_cast_32(RV32M) << 12)) | (0 << 13)) | (0 << 18)) | (1 << 20)) | (0 << 23)) | (sv2v_cast_32(MXL) << 30);
 	reg [31:0] exception_pc;
 	reg [1:0] priv_lvl_q;
 	reg [1:0] priv_lvl_d;
@@ -402,6 +402,7 @@ module ibex_cs_registers (
 	reg [(MHPMCounterNum + 3) - 1:0] mcountinhibit_d;
 	reg [(MHPMCounterNum + 3) - 1:0] mcountinhibit_q;
 	reg mcountinhibit_we;
+	reg [2047:0] mhpmcounter_d;
 	wire [2047:0] mhpmcounter;
 	reg [31:0] mhpmcounter_we;
 	reg [31:0] mhpmcounterh_we;
@@ -803,7 +804,7 @@ module ibex_cs_registers (
 		mhpmcounter_incr[8] = branch_i;
 		mhpmcounter_incr[9] = branch_taken_i;
 		mhpmcounter_incr[10] = instr_ret_compressed_i;
-		begin : sv2v_autoblock_152
+		begin : sv2v_autoblock_154
 			reg [31:0] i;
 			for (i = 3 + MHPMCounterNum; i < 32; i = i + 1)
 				begin : gen_mhpmcounter_incr_inactive
@@ -812,7 +813,7 @@ module ibex_cs_registers (
 		end
 	end
 	always @(*) begin : gen_mhpmevent
-		begin : sv2v_autoblock_153
+		begin : sv2v_autoblock_155
 			reg signed [31:0] i;
 			for (i = 0; i < 32; i = i + 1)
 				begin : gen_mhpmevent_active
@@ -821,7 +822,7 @@ module ibex_cs_registers (
 				end
 		end
 		mhpmevent[1] = 1'sb0;
-		begin : sv2v_autoblock_154
+		begin : sv2v_autoblock_156
 			reg [31:0] i;
 			for (i = 3 + MHPMCounterNum; i < 32; i = i + 1)
 				begin : gen_mhpmevent_inactive
@@ -829,46 +830,44 @@ module ibex_cs_registers (
 				end
 		end
 	end
-	ibex_counters #(
-		.MaxNumCounters(1),
-		.NumCounters(1),
-		.CounterWidth(64)
-	) mcycle_counter_i(
-		.clk_i(clk_i),
-		.rst_ni(rst_ni),
-		.counter_inc_i(mhpmcounter_incr[0] & ~mcountinhibit[0]),
-		.counterh_we_i(mhpmcounterh_we[0]),
-		.counter_we_i(mhpmcounter_we[0]),
-		.counter_val_i(csr_wdata_int),
-		.counter_val_o(mhpmcounter[1984+:64])
-	);
-	ibex_counters #(
-		.MaxNumCounters(1),
-		.NumCounters(1),
-		.CounterWidth(64)
-	) minstret_counter_i(
-		.clk_i(clk_i),
-		.rst_ni(rst_ni),
-		.counter_inc_i(mhpmcounter_incr[2] & ~mcountinhibit[2]),
-		.counterh_we_i(mhpmcounterh_we[2]),
-		.counter_we_i(mhpmcounter_we[2]),
-		.counter_val_i(csr_wdata_int),
-		.counter_val_o(mhpmcounter[1856+:64])
-	);
-	assign mhpmcounter[1920+:64] = 1'sb0;
-	ibex_counters #(
-		.MaxNumCounters(29),
-		.NumCounters(MHPMCounterNum),
-		.CounterWidth(MHPMCounterWidth)
-	) mcounters_variable_i(
-		.clk_i(clk_i),
-		.rst_ni(rst_ni),
-		.counter_inc_i(mhpmcounter_incr[31:3] & ~mcountinhibit[31:3]),
-		.counterh_we_i(mhpmcounterh_we[31:3]),
-		.counter_we_i(mhpmcounter_we[31:3]),
-		.counter_val_i(csr_wdata_int),
-		.counter_val_o(mhpmcounter[0+:1856])
-	);
+	always @(*) begin : mhpmcounter_update
+		mhpmcounter_d = mhpmcounter;
+		begin : sv2v_autoblock_157
+			reg signed [31:0] i;
+			for (i = 0; i < 32; i = i + 1)
+				begin : gen_mhpmcounter_update
+					if (mhpmcounter_incr[i] & ~mcountinhibit[i])
+						mhpmcounter_d[(31 - i) * 64+:64] = mhpmcounter[(31 - i) * 64+:64] + 64'h1;
+					if (mhpmcounter_we[i])
+						mhpmcounter_d[((31 - i) * 64) + 31-:32] = csr_wdata_int;
+					else if (mhpmcounterh_we[i])
+						mhpmcounter_d[((31 - i) * 64) + 63-:32] = csr_wdata_int;
+				end
+		end
+	end
+	generate
+		for (i = 0; i < 32; i = i + 1) begin : g_mhpmcounter
+			if (i < (3 + MHPMCounterNum)) begin : g_mhpmcounter_exists
+				localparam [31:0] IMHPMCounterWidth = (i < 3 ? 64 : MHPMCounterWidth);
+				reg [IMHPMCounterWidth - 1:0] mhpmcounter_q;
+				always @(posedge clk_i or negedge rst_ni)
+					if (~rst_ni)
+						mhpmcounter_q <= 1'sb0;
+					else
+						mhpmcounter_q <= mhpmcounter_d[((31 - i) * 64) + ((IMHPMCounterWidth - 1) >= 0 ? IMHPMCounterWidth - 1 : ((IMHPMCounterWidth - 1) + ((IMHPMCounterWidth - 1) >= 0 ? IMHPMCounterWidth : 2 - IMHPMCounterWidth)) - 1)-:((IMHPMCounterWidth - 1) >= 0 ? IMHPMCounterWidth : 2 - IMHPMCounterWidth)];
+				if (IMHPMCounterWidth < 64) begin : g_mhpmcounter_narrow
+					assign mhpmcounter[((31 - i) * 64) + ((IMHPMCounterWidth - 1) >= 0 ? IMHPMCounterWidth - 1 : ((IMHPMCounterWidth - 1) + ((IMHPMCounterWidth - 1) >= 0 ? IMHPMCounterWidth : 2 - IMHPMCounterWidth)) - 1)-:((IMHPMCounterWidth - 1) >= 0 ? IMHPMCounterWidth : 2 - IMHPMCounterWidth)] = mhpmcounter_q;
+					assign mhpmcounter[((31 - i) * 64) + (63 >= IMHPMCounterWidth ? 63 : (63 + (63 >= IMHPMCounterWidth ? 64 - IMHPMCounterWidth : (IMHPMCounterWidth - 63) + 1)) - 1)-:(63 >= IMHPMCounterWidth ? 64 - IMHPMCounterWidth : (IMHPMCounterWidth - 63) + 1)] = 1'sb0;
+				end
+				else begin : g_mhpmcounter_full
+					assign mhpmcounter[(31 - i) * 64+:64] = mhpmcounter_q;
+				end
+			end
+			else begin : g_no_mhpmcounter
+				assign mhpmcounter[(31 - i) * 64+:64] = 1'sb0;
+			end
+		end
+	endgenerate
 	generate
 		if (MHPMCounterNum < 29) begin : g_mcountinhibit_reduced
 			assign mcountinhibit = {{29 - MHPMCounterNum {1'b1}}, mcountinhibit_q};

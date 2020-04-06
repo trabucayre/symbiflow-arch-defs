@@ -42,23 +42,23 @@ module pinmux (
 	generate
 		genvar k;
 		for (k = 0; k < pinmux_reg_pkg_NPeriphIn; k = k + 1) begin : gen_periph_in
-			wire [(2 ** $clog2(pinmux_reg_pkg_NMioPads + 2)) - 1:0] data_mux;
-			assign data_mux = sv2v_cast_454DA({mio_in_i, 1'b1, 1'b0});
+			wire [(pinmux_reg_pkg_NMioPads + 2) - 1:0] data_mux;
+			assign data_mux = sv2v_cast_A78F0({mio_in_i, 1'b1, 1'b0});
 			assign mio_to_periph_o[k] = data_mux[reg2hw[192 + ((k * 6) + 5)-:6]];
 		end
 	endgenerate
 	generate
 		for (k = 0; k < pinmux_reg_pkg_NMioPads; k = k + 1) begin : gen_mio_out
-			wire [(2 ** $clog2(pinmux_reg_pkg_NPeriphOut + 3)) - 1:0] data_mux;
-			wire [(2 ** $clog2(pinmux_reg_pkg_NPeriphOut + 3)) - 1:0] oe_mux;
-			assign data_mux = sv2v_cast_454DA({periph_to_mio_i, 1'b0, 1'b1, 1'b0});
-			assign oe_mux = sv2v_cast_454DA({periph_to_mio_oe_i, 1'b0, 1'b1, 1'b1});
+			wire [(pinmux_reg_pkg_NPeriphOut + 3) - 1:0] data_mux;
+			wire [(pinmux_reg_pkg_NPeriphOut + 3) - 1:0] oe_mux;
+			assign data_mux = sv2v_cast_A78F0({periph_to_mio_i, 1'b0, 1'b1, 1'b0});
+			assign oe_mux = sv2v_cast_A78F0({periph_to_mio_oe_i, 1'b0, 1'b1, 1'b1});
 			assign mio_out_o[k] = data_mux[reg2hw[(k * 6) + 5-:6]];
 			assign mio_oe_o[k] = oe_mux[reg2hw[(k * 6) + 5-:6]];
 		end
 	endgenerate
-	function automatic [(((2 ** $clog2(pinmux_reg_pkg_NPeriphOut + 3)) - 1) >= 0 ? 2 ** $clog2(pinmux_reg_pkg_NPeriphOut + 3) : 2 - (2 ** $clog2(pinmux_reg_pkg_NPeriphOut + 3))) - 1:0] sv2v_cast_454DA;
-		input reg [(((2 ** $clog2(pinmux_reg_pkg_NPeriphOut + 3)) - 1) >= 0 ? 2 ** $clog2(pinmux_reg_pkg_NPeriphOut + 3) : 2 - (2 ** $clog2(pinmux_reg_pkg_NPeriphOut + 3))) - 1:0] inp;
-		sv2v_cast_454DA = inp;
+	function automatic [(((pinmux_reg_pkg_NPeriphOut + 3) - 1) >= 0 ? pinmux_reg_pkg_NPeriphOut + 3 : 2 - (pinmux_reg_pkg_NPeriphOut + 3)) - 1:0] sv2v_cast_A78F0;
+		input reg [(((pinmux_reg_pkg_NPeriphOut + 3) - 1) >= 0 ? pinmux_reg_pkg_NPeriphOut + 3 : 2 - (pinmux_reg_pkg_NPeriphOut + 3)) - 1:0] inp;
+		sv2v_cast_A78F0 = inp;
 	endfunction
 endmodule
