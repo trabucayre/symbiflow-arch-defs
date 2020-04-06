@@ -65,6 +65,9 @@ module top_earlgrey_nexysvideo (
 	wire IO_GP13 = 0;
 	wire IO_GP14 = 0;
 	wire IO_GP15 = 0;
+
+	BUFG (.I(IO_CLK), .O(IO_CLK_BUFG));
+
 	top_earlgrey #(.IbexPipeLine(1)) top_earlgrey(
 		.clk_i(clk_sys),
 		.rst_ni(rst_sys_n),
@@ -97,7 +100,7 @@ module top_earlgrey_nexysvideo (
 		.scanmode_i(1'b0)
 	);
 	clkgen_xil7series clkgen(
-		.IO_CLK(IO_CLK),
+		.IO_CLK(IO_CLK_BUFG),
 		.IO_RST_N(IO_RST_N),
 		.clk_sys(clk_sys),
 		.clk_48MHz(clk_48mhz),
@@ -110,4 +113,5 @@ module top_earlgrey_nexysvideo (
 	assign cio_usbdev_sense_p2d = 1'b0;
 	assign cio_usbdev_dp_p2d = 1'b0;
 	assign cio_usbdev_dn_p2d = 1'b0;
+
 endmodule
