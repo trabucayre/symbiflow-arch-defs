@@ -168,6 +168,7 @@ add_fpga_target(
     xbar_main.v
     xbar_peri.v
   INPUT_IO_FILE pins_nexys_video.pcf
+  INPUT_XDC_FILE pins_nexysvideo.xdc
   SDC_FILE pins_nexys_video.sdc
 )
 
