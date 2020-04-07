@@ -66,7 +66,10 @@ module top_earlgrey_nexysvideo (
 	wire IO_GP14 = 0;
 	wire IO_GP15 = 0;
 
-	BUFG (.I(IO_CLK), .O(IO_CLK_BUFG));
+	BUFG clk_io_bufg(
+		.I(IO_CLK),
+		.O(IO_CLK_BUFG)
+	);
 
 	top_earlgrey #(.IbexPipeLine(1)) top_earlgrey(
 		.clk_i(clk_sys),

@@ -15,7 +15,6 @@ add_fpga_target(
     aes_key_expand.v
     aes_mix_columns.v
     aes_mix_single_column.v
-    aes_pkg.v
     aes_reg_top.v
     aes_sbox_canright.v
     aes_sbox_lut.v
@@ -37,7 +36,6 @@ add_fpga_target(
     dmi_jtag_tap.v
     dmi_jtag.v
     dm_mem.v
-    dm_pkg.v
     dm_sba.v
     flash_ctrl_reg_top.v
     flash_ctrl.v
@@ -150,7 +148,6 @@ add_fpga_target(
     tlul_socket_m1.v
     top_earlgrey_nexysvideo.v
     top_earlgrey.v
-    top_pkg.v
     uart_core.v
     uart_reg_top.v
     uart_rx.v
