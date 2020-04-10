@@ -7770,3 +7770,18 @@ module PS7 (
 
 endmodule
 
+ 
+// ============================================================================
+// Latches
+
+module LDCE (
+   output reg Q, 
+   input CLR, D, G, GE
+);
+
+parameter [0:0] INIT = 1'b0;
+
+LDCE_ZINI #(.ZINI(!INIT))
+  _TECHMAP_REPLACE_ (.Q(Q), .CLR(CLR), .D(D), .G(G), .GE(GE), .R(SR_SIG));
+
+endmodule

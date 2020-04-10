@@ -1833,3 +1833,17 @@ module PS7_VPR (
 
 endmodule
 
+module LDCE_ZINI (
+  output req Q,
+  input CLR,
+  input D,
+  input G,
+  input GE
+);
+  parameter [0:0] ZINI = 1'b0;
+ 
+  initial Q = !ZINI;
+  always @*
+    if (CLR) Q <= 1'b0;
+    else if (GE && g) Q <= D;
+endmodule
