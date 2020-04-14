@@ -1834,7 +1834,7 @@ module PS7_VPR (
 endmodule
 
 module LDCE_ZINI (
-  output req Q,
+  output reg Q,
   input CLR,
   input D,
   input G,
