@@ -18,7 +18,7 @@ module clkgen_xil7series (
 	wire clk_fb_unbuf;
 	wire clk_48_buf;
 	wire clk_48_unbuf;
-	IBUF io_clk_ibuf(
+	BUFG io_clk_ibuf(
 		.I(IO_CLK),
 		.O(io_clk_buf)
 	);
