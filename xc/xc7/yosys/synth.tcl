@@ -11,7 +11,7 @@ yosys -import
 #
 # Do not infer IOBs for targets that use a ROI.
 if { $::env(USE_ROI) == "TRUE" } {
-    synth_xilinx -vpr -flatten -abc9 -nosrl -noclkbuf -nodsp
+    synth_xilinx -vpr -flatten -abc9 -nosrl -noclkbuf -nodsp -noiopad -nowidelut
 } else {
     # Read Yosys baseline library first.
     read_verilog -lib -D_EXPLICIT_CARRY +/xilinx/cells_sim.v
@@ -23,7 +23,7 @@ if { $::env(USE_ROI) == "TRUE" } {
     hierarchy -check -auto-top
 
     # Start flow after library reading
-    synth_xilinx -vpr -flatten -abc9 -nosrl -noclkbuf -nodsp -iopad -run prepare:check
+    synth_xilinx -vpr -flatten -abc9 -nosrl -noclkbuf -nodsp -nowidelut -run prepare:check
 }
 if { [info exists ::env(INPUT_XDC_FILE)] && $::env(INPUT_XDC_FILE) != "" } {
   read_xdc -part_json $::env(PART_JSON) $::env(INPUT_XDC_FILE)
