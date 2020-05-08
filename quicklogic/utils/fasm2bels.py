@@ -521,6 +521,8 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
+    print("TEST DEBUG INFO")
+
     parser.add_argument("input_file", type=Path, help="Input fasm file")
 
     parser.add_argument(
