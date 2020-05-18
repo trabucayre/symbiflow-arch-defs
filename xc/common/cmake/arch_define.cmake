@@ -64,7 +64,7 @@ function(ADD_XC_ARCH_DEFINE)
       --place_delta_delay_matrix_calculation_method dijkstra \
       --place_delay_model delta_override \
       --router_lookahead connection_box_map \
-      --quick_check_route on \
+      --check_route quick \
       --strict_checks off \
       --allow_dangling_combinational_nodes on \
       --disable_errors check_unbuffered_edges:check_route \
