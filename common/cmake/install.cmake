@@ -29,6 +29,15 @@ function(INSTALL_DEVICE_FILES)
   endif()
 
   set(INSTALL_FILES)
+  if(${DEVICE} MATCHES "xc7.*")
+    message(WARNING "FIXME: Skipping device files installation for ${DEVICE}-${PACKAGE} type: ${DEVICE_TYPE}")
+    return()
+  endif()
+
+  if(${DEVICE} MATCHES ".*pp3e.*")
+    message(WARNING "FIXME: Skipping device files installation for ${DEVICE}-${PACKAGE} type: ${DEVICE_TYPE}")
+    return()
+  endif()
 
   # FIXME: do not install a200t
   if(${DEVICE} STREQUAL "xc7a200t")
