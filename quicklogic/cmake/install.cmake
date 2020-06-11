@@ -24,6 +24,23 @@ function(DEFINE_QL_TOOLCHAIN_TARGET)
   get_target_property_required(FASM_TO_BIT ${ARCH} FASM_TO_BIT)
 
   set(WRAPPERS env generate_constraints pack place route synth write_bitstream write_fasm write_jlink write_bitheader write_fasm2bels generate_fasm2bels ql_symbiflow)
+
+  get_file_target(FASM_TO_BIT_TARGET ${FASM_TO_BIT})
+  # Add fasm2bit to all deps, so it is installed with make install
+  add_custom_target(
+    "DEVICE_INSTALL_${FASM_TO_BIT_TARGET}"
+    ALL
+    DEPENDS ${FASM_TO_BIT}
+    )
+
+  get_file_target(CELLS_SIM_TARGET ${DEFINE_QL_TOOLCHAIN_TARGET_CELLS_SIM})
+  # Add cells.sim to all deps, so it is installed with make install
+  add_custom_target(
+    "DEVICE_INSTALL_${CELLS_SIM_TARGET}"
+    ALL
+    DEPENDS ${DEFINE_QL_TOOLCHAIN_TARGET_CELLS_SIM}
+    )
+
   set(TOOLCHAIN_WRAPPERS)
 
   foreach(WRAPPER ${WRAPPERS})
@@ -125,7 +142,7 @@ endfunction()
 
 function(DEFINE_QL_PINMAP_CSV_INSTALL_TARGET)
   set(options)
-  set(oneValueArgs PART DEVICE_TYPE BOARD DEVICE PACKAGE)
+  set(oneValueArgs PART DEVICE_TYPE BOARD DEVICE PACKAGE FABRIC_PACKAGE)
   set(multiValueArgs)
 
   cmake_parse_arguments(
@@ -153,5 +170,5 @@ function(DEFINE_QL_PINMAP_CSV_INSTALL_TARGET)
     )
   install(FILES ${PINMAP_FILE}
     DESTINATION "share/arch/${DEVICE}_${PACKAGE}/${PART}"
-    RENAME "pinmap.csv")
+    RENAME "pinmap_${ADD_QUICKLOGIC_BOARD_FABRIC_PACKAGE}.csv")
 endfunction()
