@@ -2,7 +2,7 @@
 import argparse
 import pickle
 import itertools
-from collections import defaultdict
+import re
 
 import lxml.etree as ET
 
@@ -12,10 +12,12 @@ import lib.rr_graph_xml.graph2 as rr_xml
 from lib import progressbar_utils
 
 from data_structs import *
-from utils import yield_muxes, fixup_pin_name
+from utils import fixup_pin_name
+
+from rr_utils import add_node, add_track, add_edge, connect
+from switchbox_model import SwitchboxModel, QmuxSwitchboxModel
 
 # =============================================================================
-
 
 def is_hop(connection):
     """
@@ -45,6 +47,29 @@ def is_tile(connection):
     return False
 
 
+def is_direct(connection):
+    """
+    Returns True if the connections spans two tiles directly. Not necessarly
+    at the same location
+    """
+
+    if connection.src.type == ConnectionType.TILE and \
+       connection.dst.type == ConnectionType.TILE:
+        return True
+
+    return False
+
+def is_clock(connection):
+    """
+    Returns True if the connection spans two clock cells
+    """
+
+    if connection.src.type == ConnectionType.CLOCK or \
+       connection.dst.type == ConnectionType.CLOCK:
+        return True
+
+    return False
+
 def is_local(connection):
     """
     Returns true if a connection is local.
@@ -54,576 +79,294 @@ def is_local(connection):
 
 # =============================================================================
 
+def get_vpr_switch_for_clock_cell(graph, cell, src, dst):
 
-def add_track(graph, track, segment_id, node_timing=None):
+    # Get a switch to model the mux delay properly. First try using
+    # the cell name
+    try:
+        switch_name = "{}.{}.{}.{}".format(cell.type, cell.name, src, dst)
+        switch_id = graph.get_switch_id(switch_name)
+    except KeyError:
+
+        # Not found, try using the cell type
+        try:
+            switch_name = "{}.{}.{}.{}".format(cell.type, cell.type, src, dst)
+            switch_id = graph.get_switch_id(switch_name)
+        except KeyError:
+
+            # Still not found, use the generic one
+            switch_id = graph.get_switch_id("generic")
+
+            print("WARNING: No VPR switch found for '{}.{}' to '{}.{}'".format(
+                cell.name, src,
+                cell.name, dst
+            ))
+
+    return switch_id
+
+
+class QmuxModel(object):
     """
-    Adds a track to the graph. Returns the node object representing the track
-    node.
-    """
+    A model of a QMUX cell implemented in the "route through" manner using
+    RR nodes and edges.
 
-    if node_timing is None:
-        node_timing = rr.NodeTiming(r=0.0, c=0.0)
+    A QMUX has the following clock inputs
+     - 0: QCLKIN0
+     - 1: QCLKIN1
+     - 2: QCLKIN2
+     - 3: HSCKIN (from routing)
 
-    node_id = graph.add_track(track, segment_id, timing=node_timing)
-    node = graph.nodes[-1]
-    assert node.id == node_id
+    The selection is controlled by a binary value of {IS1, IS0}. Both of the
+    pins are connected to the switchbox.
 
-    return node
+    Since the QMUX is to be modelled using routing resources only, the part
+    of the switchbox (of the whole switchbox) controlling the IS0 and IS1 pins
+    will be removed. Appropriate fasm features will be attached to the edges
+    that will model the QMUX. This will mimic the switchbox operation.
 
-
-def add_node(graph, loc, direction, segment_id):
-    """
-    Adds a track of length 1 to the graph. Returns the node object
-    """
-
-    return add_track(
-        graph,
-        tracks.Track(
-            direction=direction,
-            x_low=loc.x,
-            x_high=loc.x,
-            y_low=loc.y,
-            y_high=loc.y,
-        ), segment_id
-    )
-
-
-# =============================================================================
-
-
-def node_joint_location(node_a, node_b):
-    """
-    Given two VPR nodes returns a location of the point where they touch each
-    other.
-    """
-
-    loc_a1 = Loc(node_a.loc.x_low, node_a.loc.y_low)
-    loc_a2 = Loc(node_a.loc.x_high, node_a.loc.y_high)
-
-    loc_b1 = Loc(node_b.loc.x_low, node_b.loc.y_low)
-    loc_b2 = Loc(node_b.loc.x_high, node_b.loc.y_high)
-
-    if loc_a1 == loc_b1:
-        return loc_a1
-    if loc_a1 == loc_b2:
-        return loc_a1
-    if loc_a2 == loc_b1:
-        return loc_a2
-    if loc_a2 == loc_b2:
-        return loc_a2
-
-    assert False, (node_a, node_b)
-
-
-def add_edge(
-        graph, src_node_id, dst_node_id, switch_id, meta_name=None,
-        meta_value=""
-):
-    """
-    Adds an edge to the routing graph. If the given switch corresponds to a
-    "pass" type switch then adds two edges going both ways.
+    The HSCKIN input is not modelled so the global clock network cannot be
+    entered at a QMUX.
     """
 
-    # Sanity check
-    assert src_node_id != dst_node_id, \
-        (src_node_id, dst_node_id, switch_id, meta_name, meta_value)
-
-    # Connect src to dst
-    graph.add_edge(src_node_id, dst_node_id, switch_id, meta_name, meta_value)
-
-    # Check if the switch is of the "pass" type. If so then add an edge going
-    # in the opposite way.
-    switch = graph.switch_map[switch_id]
-    if switch.type in [rr.SwitchType.SHORT, rr.SwitchType.PASS_GATE]:
-
-        graph.add_edge(
-            dst_node_id, src_node_id, switch_id, meta_name, meta_value
-        )
-
-
-def connect(
-        graph,
-        src_node,
-        dst_node,
-        switch_id=None,
-        segment_id=None,
-        meta_name=None,
-        meta_value=""
-):
-    """
-    Connect two VPR nodes in a way that certain rules are obeyed.
-
-    The rules are:
-    - a CHANX cannot connect directly to a CHANY and vice versa,
-    - a CHANX cannot connect to an IPIN facing left or right,
-    - a CHANY cannot connect to an IPIN facting top or bottom,
-    - an OPIN facing left or right cannot connect to a CHANX,
-    - an OPIN facing top or bottom cannot connect to a CHANY
-
-    Whenever a rule is not met then the connection is made through a padding
-    node:
-
-    src -> [delayless] -> pad -> [desired switch] -> dst
-
-    Otherwise the connection is made directly
-
-    src -> [desired switch] -> dst
-
-    The influence of whether the rules are obeyed or not on the actual VPR
-    behavior is unclear.
-    """
-
-    # Use the default delayless switch if none is given
-    if switch_id is None:
-        switch_id = graph.get_delayless_switch_id()
-
-    # Determine which segment to use if none given
-    if segment_id is None:
-        # If the source is IPIN/OPIN then use the same segment as used by
-        # the destination.
-        # If the destination is IPIN/OPIN then do the opposite.
-        # Finally if both are CHANX/CHANY then use the source's segment.
-
-        if src_node.type in [rr.NodeType.IPIN, rr.NodeType.OPIN]:
-            segment_id = dst_node.segment.segment_id
-        elif dst_node.type in [rr.NodeType.IPIN, rr.NodeType.OPIN]:
-            segment_id = src_node.segment.segment_id
-        else:
-            segment_id = src_node.segment.segment_id
-
-    # CHANX to CHANY or vice-versa
-    if src_node.type == rr.NodeType.CHANX and dst_node.type == rr.NodeType.CHANY or \
-       src_node.type == rr.NodeType.CHANY and dst_node.type == rr.NodeType.CHANX:
-
-        # Check loc
-        node_joint_location(src_node, dst_node)
-
-        # Connect directly
-        add_edge(
-            graph, src_node.id, dst_node.id, switch_id, meta_name, meta_value
-        )
-
-    # CHANX to CHANX or CHANY to CHANY
-    elif src_node.type == rr.NodeType.CHANX and dst_node.type == rr.NodeType.CHANX or \
-         src_node.type == rr.NodeType.CHANY and dst_node.type == rr.NodeType.CHANY:
-
-        loc = node_joint_location(src_node, dst_node)
-        direction = "X" if src_node.type == rr.NodeType.CHANY else "Y"
-
-        # Padding node
-        pad_node = add_node(graph, loc, direction, segment_id)
-
-        # Connect through the padding node
-        add_edge(
-            graph, src_node.id, pad_node.id, graph.get_delayless_switch_id()
-        )
-
-        add_edge(
-            graph, pad_node.id, dst_node.id, switch_id, meta_name, meta_value
-        )
-
-    # OPIN to CHANX/CHANY
-    elif src_node.type == rr.NodeType.OPIN and dst_node.type in \
-        [rr.NodeType.CHANX, rr.NodeType.CHANY]:
-
-        # All OPINs go right (towards +X)
-        assert src_node.loc.side == tracks.Direction.RIGHT, src_node
-
-        # Connected to CHANX
-        if dst_node.type == rr.NodeType.CHANX:
-
-            loc = node_joint_location(src_node, dst_node)
-
-            # Padding node
-            pad_node = add_node(graph, loc, "Y", segment_id)
-
-            # Connect through the padding node
-            add_edge(
-                graph, src_node.id, pad_node.id,
-                graph.get_delayless_switch_id()
-            )
-
-            add_edge(
-                graph, pad_node.id, dst_node.id, switch_id, meta_name,
-                meta_value
-            )
-
-        # Connected to CHANY
-        elif dst_node.type == rr.NodeType.CHANY:
-
-            # Directly
-            add_edge(
-                graph, src_node.id, dst_node.id, switch_id, meta_name,
-                meta_value
-            )
-
-        # Should not happen
-        else:
-            assert False, dst_node
-
-    # CHANX/CHANY to IPIN
-    elif dst_node.type == rr.NodeType.IPIN and src_node.type in \
-        [rr.NodeType.CHANX, rr.NodeType.CHANY]:
-
-        # All IPINs go top (toward +Y)
-        assert dst_node.loc.side == tracks.Direction.TOP, dst_node
-
-        # Connected to CHANY
-        if src_node.type == rr.NodeType.CHANY:
-
-            loc = node_joint_location(src_node, dst_node)
-
-            # Padding node
-            pad_node = add_node(graph, loc, "X", segment_id)
-
-            # Connect through the padding node
-            add_edge(
-                graph, src_node.id, pad_node.id,
-                graph.get_delayless_switch_id()
-            )
-
-            add_edge(
-                graph, pad_node.id, dst_node.id, switch_id, meta_name,
-                meta_value
-            )
-
-        # Connected to CHANX
-        elif src_node.type == rr.NodeType.CHANX:
-
-            # Directly
-            add_edge(
-                graph, src_node.id, dst_node.id, switch_id, meta_name,
-                meta_value
-            )
-
-        # Should not happen
-        else:
-            assert False, dst_node
-
-    # An unhandled case
-    else:
-        assert False, (src_node, dst_node)
-
-
-# =============================================================================
-
-
-class SwitchboxModel(object):
-    """
-    Represents a model of connectivity of a concrete instance of a switchbox.
-    """
-
-    def __init__(self, graph, loc, phy_loc, switchbox):
+    def __init__(self, graph, cell, phy_loc, switchbox_model, connections, node_map):
         self.graph = graph
-        self.loc = loc
+        self.cell = cell
         self.phy_loc = phy_loc
-        self.switchbox = switchbox
+        self.switchbox_model = switchbox_model
 
-        self.mux_input_to_node = {}
-        self.mux_output_to_node = {}
+        self.connections = [c for c in connections if is_clock(c)]
+        self.connection_loc_to_node = node_map
 
-        self.input_to_node = {}
+        self.ctrl_routes = {}
 
         self._build()
 
-    @staticmethod
-    def get_chan_dirs_for_stage(stage):
+    def _build(self):
         """
-        Returns channel directions for inputs and outputs of a stage.
-        """
-
-        if stage.type == "HIGHWAY":
-            return "Y", "X"
-
-        elif stage.type == "STREET":
-            dir_inp = "Y" if (stage.id % 2) else "X"
-            dir_out = "X" if (stage.id % 2) else "Y"
-            return dir_inp, dir_out
-
-        else:
-            assert False, stage.type
-
-    def _create_muxes(self):
-        """
-        Creates nodes for muxes and internal edges within them. Annotates the
-        internal edges with fasm data.
-
-        Builds maps of muxs' inputs and outpus to VPR nodes.
+        Builds the QMUX cell model
         """
 
-        # Build mux driver timing map. Assign each mux output its timing data
-        driver_timing = {}
-        for connection in self.switchbox.connections:
-            src = connection.src
-            dst = connection.dst
+        # Get routes for control pins
+        self.ctrl_routes = self.switchbox_model.ctrl_routes[self.cell.name]
 
-            stage = self.switchbox.stages[src.stage_id]
-            switch = stage.switches[src.switch_id]
-            mux = switch.muxes[src.mux_id]
-            pin = mux.inputs[src.pin_id]
+        # Check the routes, there has to be only one per const source
+        for pin, pin_routes in self.ctrl_routes.items():
+            for net in pin_routes.keys():
+                assert len(pin_routes[net]) == 1, (cell.name, pin, net, pin_routes[net])
+                pin_routes[net] = pin_routes[net][0]
 
-            if pin.id not in mux.timing:
-                continue
+        # Get segment id
+        segment_id = self.graph.get_segment_id_from_name("clock")
 
-            timing = mux.timing[pin.id].driver
+        # Get the GMUX to QMUX connections
+        eps = {}
+        for connection in self.connections:
+            if connection.dst.type == ConnectionType.CLOCK:
+                dst_cell, dst_pin = connection.dst.pin.split(".")
 
-            key = (src.stage_id, src.switch_id, src.mux_id)
-            if key in driver_timing:
-                assert driver_timing[key] == timing, \
-                    (self.loc, key, driver_timing[key], timing)
+                if dst_cell == self.cell.name and dst_pin.startswith("QCLKIN"):
+                    eps[dst_pin] = connection.dst
+
+        # Get the QMUX to CAND connection
+        for connection in self.connections:
+            if connection.src.type == ConnectionType.CLOCK:
+                src_cell, src_pin = connection.src.pin.split(".")
+
+                if src_cell == self.cell.name and src_pin == "IZ":
+                    eps["IZ"] = connection.src
+
+        # Validate
+        for pin in ["IZ", "QCLKIN0", "QCLKIN1", "QCLKIN2"]:
+            if pin not in eps:
+                print("ERROR: Coulnd't find rr node for {}.{}".format(self.cell.name, pin))
+                return
+
+        # Add edges modelling the QMUX
+        for i in [0, 1, 2]:
+            pin = "QCLKIN{}".format(i)
+
+            src_node = self.connection_loc_to_node[eps[pin]]
+            dst_node = self.connection_loc_to_node[eps["IZ"]]
+
+            # Make edge metadata
+            metadata = self._get_metadata(i)
+
+            if len(metadata):
+                meta_name = "fasm_features"
+                meta_value = "\n".join(metadata)
             else:
-                driver_timing[key] = timing
+                meta_name = None
+                meta_value = ""
 
-        # Create muxes
-        segment_id = self.graph.get_segment_id_from_name("sbox")
-
-        for stage, switch, mux in yield_muxes(self.switchbox):
-            dir_inp, dir_out = self.get_chan_dirs_for_stage(stage)
-
-            # Output node
-            key = (stage.id, switch.id, mux.id)
-            assert key not in self.mux_output_to_node
-
-            out_node = add_node(self.graph, self.loc, dir_out, segment_id)
-            self.mux_output_to_node[key] = out_node
-
-            # Intermediate output node
-            int_node = add_node(self.graph, self.loc, dir_out, segment_id)
-
-            # Get switch id for the switch assigned to the driver. If
-            # there is none then use the delayless switch. Probably the
-            # driver is connected to a const.
-            if key in driver_timing:
-                switch_id = self.graph.get_switch_id(
-                    driver_timing[key].vpr_switch
-                )
-            else:
-                switch_id = self.graph.get_delayless_switch_id()
-
-            # Output driver edge
-            connect(
+            switch_id = get_vpr_switch_for_clock_cell(
                 self.graph,
-                int_node,
-                out_node,
-                switch_id=switch_id,
-                segment_id=segment_id,
+                self.cell,
+                #pin,
+                "QCLKIN0", # FIXME: Always use the QCLKIN0->IZ timing here
+                "IZ"
             )
 
-            # Input nodes + mux edges
-            for pin in mux.inputs.values():
-
-                key = (stage.id, switch.id, mux.id, pin.id)
-                assert key not in self.mux_input_to_node
-
-                # Input node
-                inp_node = add_node(self.graph, self.loc, dir_inp, segment_id)
-                self.mux_input_to_node[key] = inp_node
-
-                # Get mux metadata
-                metadata = self._get_metadata_for_mux(
-                    stage, switch, mux, pin.id
-                )
-
-                if len(metadata):
-                    meta_name = "fasm_features"
-                    meta_value = "\n".join(metadata)
-                else:
-                    meta_name = None
-                    meta_value = ""
-
-                # Get switch id for the switch assigned to the mux edge. If
-                # there is none then use the delayless switch. Probably the
-                # edge is connected to a const.
-                if pin.id in mux.timing:
-                    switch_id = self.graph.get_switch_id(
-                        mux.timing[pin.id].sink.vpr_switch
-                    )
-                else:
-                    switch_id = self.graph.get_delayless_switch_id()
-
-                # Mux switch with appropriate timing and fasm metadata
-                connect(
-                    self.graph,
-                    inp_node,
-                    int_node,
-                    switch_id=switch_id,
-                    segment_id=segment_id,
-                    meta_name=meta_name,
-                    meta_value=meta_value,
-                )
-
-    def _connect_muxes(self):
-        """
-        Creates VPR edges that connects muxes within the switchbox.
-        """
-
-        segment_id = self.graph.get_segment_id_from_name("sbox")
-        switch_id = self.graph.get_switch_id("short")
-
-        # Add internal connections between muxes.
-        for connection in self.switchbox.connections:
-            src = connection.src
-            dst = connection.dst
-
-            # Check
-            assert src.pin_id == 0, src
-            assert src.pin_direction == PinDirection.OUTPUT, src
-
-            # Get the input node
-            key = (dst.stage_id, dst.switch_id, dst.mux_id, dst.pin_id)
-            dst_node = self.mux_input_to_node[key]
-
-            # Get the output node
-            key = (src.stage_id, src.switch_id, src.mux_id)
-            src_node = self.mux_output_to_node[key]
-
-            # Connect
+            # Mux switch with appropriate timing and fasm metadata
             connect(
                 self.graph,
                 src_node,
                 dst_node,
                 switch_id=switch_id,
-                segment_id=segment_id
+                segment_id=segment_id,
+                meta_name=meta_name,
+                meta_value=meta_value,
             )
 
-    def _create_input_drivers(self):
+    def _get_metadata(self, selection):
         """
-        Creates VPR nodes and edges that model input connectivity of the
-        switchbox.
+        Formats fams metadata for the QMUX cell that enables the given QMUX
+        input selection.
         """
+        metadata = []
 
-        # Create a driver map containing all mux pin locations that are
-        # connected to a driver. The map is indexed by (pin_name, vpr_switch)
-        # and groups togeather inputs that should be driver by a specific
-        # switch due to the timing model.
-        driver_map = defaultdict(lambda: [])
+        # Map selection to {IS1, IS0}.
+        # FIXME: Seems suspicious... Need to swap IS0 and IS1 ?
+        SEL_TO_PINS = {
+            0: {"IS1": "GND", "IS0": "GND"},
+            1: {"IS1": "VCC", "IS0": "GND"},
+            2: {"IS1": "GND", "IS0": "VCC"},
+        }
 
-        for pin in self.switchbox.inputs.values():
-            for loc in pin.locs:
+        assert selection in SEL_TO_PINS, selection
+        pins = SEL_TO_PINS[selection]
 
-                stage = self.switchbox.stages[loc.stage_id]
-                switch = stage.switches[loc.switch_id]
-                mux = switch.muxes[loc.mux_id]
-                pin = mux.inputs[loc.pin_id]
+        # Format prefix
+        prefix = "X{}Y{}.QMUX.QMUX".format(self.phy_loc.x, self.phy_loc.y)
 
-                if pin.id not in mux.timing:
-                    vpr_switch = None
-                else:
-                    vpr_switch = mux.timing[pin.id].driver.vpr_switch
+        # Get cell index
+        index = int(self.cell.name[-1])
 
-                key = (pin.name, vpr_switch)
-                driver_map[key].append(loc)
+        # Collect features
+        for pin, net in pins.items():
 
-        # Create input nodes for each input pin
-        segment_id = self.graph.get_segment_id_from_name("sbox")
+            # Get switchbox routing features (already prefixed)
+            for muxsel in self.ctrl_routes[pin][net]:
 
-        for pin in self.switchbox.inputs.values():
+                stage_id, switch_id, mux_id, pin_id = muxsel
+                stage = self.switchbox_model.switchbox.stages[stage_id]
 
-            node = add_node(self.graph, self.loc, "Y", segment_id)
-
-            assert pin.name not in self.input_to_node, pin.name
-            self.input_to_node[pin.name] = node
-
-        # Create driver nodes, connect everything
-        for (pin_name, vpr_switch), locs in driver_map.items():
-
-            # Create the driver node
-            drv_node = add_node(self.graph, self.loc, "X", segment_id)
-
-            # Connect input node to the driver node. Use the switch with timing.
-            inp_node = self.input_to_node[pin_name]
-
-            # Get switch id for the switch assigned to the driver. If
-            # there is none then use the delayless switch. Probably the
-            # driver is connected to a const.
-            if vpr_switch is not None:
-                switch_id = self.graph.get_switch_id(vpr_switch)
-            else:
-                switch_id = self.graph.get_delayless_switch_id()
-
-            # Connect
-            connect(
-                self.graph,
-                inp_node,
-                drv_node,
-                switch_id=switch_id,
-                segment_id=segment_id
-            )
-
-            # Now connect the driver node with its loads
-            switch_id = self.graph.get_switch_id("short")
-            for loc in locs:
-
-                key = (loc.stage_id, loc.switch_id, loc.mux_id, loc.pin_id)
-                dst_node = self.mux_input_to_node[key]
-
-                connect(
-                    self.graph,
-                    drv_node,
-                    dst_node,
-                    switch_id=switch_id,
-                    segment_id=segment_id
+                metadata += SwitchboxModel.get_metadata_for_mux(
+                    self.phy_loc, stage, switch_id, mux_id, pin_id
                 )
 
+        # These features control inverters on IS0 and IS1. The inverters
+        # are not used hence they are always disabled.
+        zinv_features = [
+            "I_invblock.I_J0.ZINV.IS0",
+            "I_invblock.I_J1.ZINV.IS1",
+            "I_invblock.I_J2.ZINV.IS0",
+            "I_invblock.I_J3.ZINV.IS0",
+            "I_invblock.I_J4.ZINV.IS1",
+        ]
+
+        for f in zinv_features:
+            feature = "{}.{}".format(prefix, f)
+            metadata.append(feature)
+
+        return metadata
+
+
+class CandModel(object):
+    """
+    A model of a CAND cell implemented in the "route through" manner using
+    RR nodes and edges.
+
+    A CAND cell has aninput IC connected to QMUX via a dedicated route, an
+    output connected to its clock column and a dynamic enable input EN
+    connected to the routing network.
+
+    We won't use the enable input EN so its not modelled in any way. The
+    CAND cell is statically enabled or disabled via the bitstream. There is
+    a single edge that models the cell with appropriate fasm features attached.
+    """
+
+    def __init__(self, graph, cell, phy_loc, connections, node_map, cand_node_map):
+        self.graph = graph
+        self.cell = cell
+        self.phy_loc = phy_loc
+
+        self.connections = [c for c in connections if is_clock(c)]
+        self.connection_loc_to_node = node_map
+
+        self.cand_node_map = cand_node_map
+
+        self._build()
+
     def _build(self):
-        """
-        Build the switchbox model
-        """
 
-        # Create and connect muxes
-        self._create_muxes()
-        self._connect_muxes()
+        # Get segment id
+        segment_id = self.graph.get_segment_id_from_name("clock")
 
-        # Create and connect input drivers models
-        self._create_input_drivers()
+        # Get the CAND name
+        cand_name = self.cell.name.split("_", maxsplit=1)[0]
+        # Get the column clock entry node
+        col_node = self.cand_node_map[cand_name][self.cell.loc]
 
-    def _get_metadata_for_mux(self, stage, switch, mux, src_pin_id):
+        # Get the QMUX to CAND connection
+        for connection in self.connections:
+            if connection.dst.type == ConnectionType.CLOCK:
+                dst_cell, dst_pin = connection.dst.pin.split(".")
+
+                if dst_cell == self.cell.name and dst_pin == "IC":
+                    ep = connection.dst
+                    break
+        else:
+            print("ERROR: Coulnd't find rr node for {}.{}".format(self.cell.name, "IC"))
+            return
+
+        # Get the node for the connection destination
+        row_node = self.connection_loc_to_node[ep]
+
+        # Edge metadata that when used switches the CAND cell from the
+        # "Static Disable" to "Static Enable" mode.
+        metadata = self._get_metadata()
+
+        if len(metadata):
+            meta_name = "fasm_features"
+            meta_value = "\n".join(metadata)
+        else:
+            meta_name = None
+            meta_value = ""
+
+        # Get switch
+        switch_id = get_vpr_switch_for_clock_cell(
+            self.graph,
+            self.cell,
+            "IC",
+            "IZ"
+        )
+
+        # Mux switch with appropriate timing and fasm metadata
+        connect(
+            self.graph,
+            row_node,
+            col_node,
+            switch_id=switch_id,
+            segment_id=segment_id,
+            meta_name=meta_name,
+            meta_value=meta_value,
+        )
+
+    def _get_metadata(self):
         """
-        Formats fasm features for the given edge representin a switchbox mux.
-        Returns a list of fasm features.
+        Formats a list of fasm features to be appended to the CAND modelling
+        edge.
         """
         metadata = []
 
         # Format prefix
-        prefix = "X{}Y{}.ROUTING".format(self.phy_loc.x, self.phy_loc.y)
+        prefix = "X{}Y{}".format(self.phy_loc.x, self.phy_loc.y)
+        # Get the CAND name
+        cand_name = self.cell.name.split("_", maxsplit=1)[0]
 
-        # A mux in the HIGHWAY stage
-        if stage.type == "HIGHWAY":
-            feature = "I_highway.IM{}.I_pg{}".format(switch.id, src_pin_id)
-
-        # A mux in the STREET stage
-        elif stage.type == "STREET":
-            feature = "I_street.Isb{}{}.I_M{}.I_pg{}".format(
-                stage.id + 1, switch.id + 1, mux.id, src_pin_id
-            )
-
-        else:
-            assert False, stage
-
-        metadata.append(".".join([prefix, feature]))
+        # Format the final fasm line
+        metadata.append("{}.{}.I_hilojoint".format(prefix, cand_name))
         return metadata
-
-    def get_input_node(self, pin_name):
-        """
-        Returns a VPR node associated with the given input of the switchbox
-        """
-        return self.input_to_node[pin_name]
-
-    def get_output_node(self, pin_name):
-        """
-        Returns a VPR node associated with the given output of the switchbox
-        """
-
-        # Get the output pin
-        pin = self.switchbox.outputs[pin_name]
-
-        assert len(pin.locs) == 1
-        loc = pin.locs[0]
-
-        # Return its node
-        key = (loc.stage_id, loc.switch_id, loc.mux_id)
-        return self.mux_output_to_node[key]
-
 
 # =============================================================================
 
@@ -687,8 +430,8 @@ def build_tile_connection_map(graph, nodes_by_id, tile_grid, connections):
 
     # Adds entry to the map
     def add_to_map(conn_loc):
-        tile = tile_grid[conn_loc.loc]
 
+        tile = tile_grid.get(conn_loc.loc, None)
         if tile is None:
             print(
                 "WARNING: No tile for pin '{} at '{}'".format(
@@ -902,8 +645,6 @@ def add_tracks_for_const_network(graph, const, tile_grid):
     assert len(src_loc) == 1, const
     src_loc = src_loc[0]
 
-    print(const, src_loc)
-
     # Go down from the source to the edge of the tilegrid
     entry_node, col_node, _ = add_track_chain(
         graph, "Y", src_loc.x, src_loc.y, 1, segment_id, switch_id
@@ -989,6 +730,7 @@ def create_track_for_hop_connection(graph, connection):
     return node
 
 
+
 # =============================================================================
 
 
@@ -1009,6 +751,10 @@ def populate_hop_connections(graph, switchbox_models, connections):
         # Get nodes
         src_node = src_switchbox_model.get_output_node(connection.src.pin)
         dst_node = dst_switchbox_model.get_input_node(connection.dst.pin)
+
+        # Do not add the connection if one of the nodes is missing
+        if src_node is None or dst_node is None:
+            continue
 
         # Create the hop wire, use it as output node of the switchbox
         hop_node = create_track_for_hop_connection(graph, connection)
@@ -1055,7 +801,10 @@ def populate_tile_connections(
                     continue
 
                 tile_node = connection_loc_to_node[connection.dst]
+
                 sbox_node = switchbox_model.get_output_node(connection.src.pin)
+                if sbox_node is None:
+                    continue
 
                 connect(graph, sbox_node, tile_node)
 
@@ -1069,7 +818,10 @@ def populate_tile_connections(
                     continue
 
                 tile_node = connection_loc_to_node[connection.src]
+
                 sbox_node = switchbox_model.get_input_node(connection.dst.pin)
+                if sbox_node is None:
+                    continue
 
                 connect(graph, tile_node, sbox_node)
 
@@ -1131,14 +883,74 @@ def populate_tile_connections(
                     # To switchbox
                     if ep == connection.dst:
                         sbox_node = switchbox_model.get_input_node(ep.pin)
+                        if sbox_node is None:
+                            continue
 
                         connect(graph, dst_node, sbox_node)
 
                     # From switchbox
                     elif ep == connection.src:
                         sbox_node = switchbox_model.get_output_node(ep.pin)
+                        if sbox_node is None:
+                            continue
 
                         connect(graph, sbox_node, src_node)
+
+def populate_direct_connections(
+        graph, connections, connection_loc_to_node
+):
+    """
+    Populates all direct tile-to-tile connections.
+    """
+
+    # Process connections
+    bar = progressbar_utils.progressbar
+    conns = [c for c in connections if is_direct(c)]
+    for connection in bar(conns):
+
+        # Get segment id and switch id
+        if connection.src.pin.startswith("CLOCK"):
+            segment_id = graph.get_segment_id_from_name("clock")
+            switch_id = graph.get_delayless_switch_id()
+
+        else:
+            segment_id = graph.get_segment_id_from_name("special")
+            switch_id = graph.get_delayless_switch_id()
+
+        # Get tile nodes
+        src_tile_node = connection_loc_to_node.get(connection.src, None)
+        dst_tile_node = connection_loc_to_node.get(connection.dst, None)
+
+        # Couldn't find at least one endpoint node
+        if src_tile_node is None or dst_tile_node is None:
+            if src_tile_node is None:
+                print(
+                    "WARNING: No OPIN node for direct connection {}".
+                    format(connection)
+                )
+
+            if dst_tile_node is None:
+                print(
+                    "WARNING: No IPIN node for direct connection {}".
+                    format(connection)
+                )
+
+            continue
+
+        # Add a track connecting the two locations
+        src_track_node, dst_track_node = add_l_track(
+            graph, 
+            src_tile_node.loc.x_low, src_tile_node.loc.y_low,
+            dst_tile_node.loc.x_low, dst_tile_node.loc.y_low,
+            segment_id,
+            switch_id
+        )
+
+        # Connect the track endpoints to the IPIN and OPIN
+        switch_id = graph.get_switch_id("generic")
+
+        connect(graph, src_tile_node, src_track_node, switch_id=switch_id)
+        connect(graph, dst_track_node, dst_tile_node, switch_id=switch_id)
 
 
 def populate_const_connections(graph, switchbox_models, const_node_map):
@@ -1156,7 +968,10 @@ def populate_const_connections(graph, switchbox_models, const_node_map):
             # Got a const input
             if pin.name in const_node_map:
                 const_node = const_node_map[pin.name][loc]
+
                 sbox_node = switchbox_model.get_input_node(pin.name)
+                if sbox_node is None:
+                    continue
 
                 connect(
                     graph,
@@ -1164,6 +979,199 @@ def populate_const_connections(graph, switchbox_models, const_node_map):
                     sbox_node,
                 )
 
+def populate_cand_connections(graph, switchbox_models, cand_node_map):
+    """
+    Populates global clock network to switchbox connections. These all the
+    CANDn inputs of a switchbox.
+    """
+
+    bar = progressbar_utils.progressbar
+    for loc, switchbox_model in bar(switchbox_models.items()):
+
+        # Look for input connected to a CAND
+        for pin in switchbox_model.switchbox.inputs.values():
+
+            # Got a CAND input
+            if pin.name in cand_node_map:
+                cand_node = cand_node_map[pin.name][loc]
+
+                sbox_node = switchbox_model.get_input_node(pin.name)
+                if sbox_node is None:
+                    continue
+
+                connect(
+                    graph,
+                    cand_node,
+                    sbox_node,
+                )
+
+# =============================================================================
+
+
+def create_quadrant_clock_tracks(graph, connections, connection_loc_to_node):
+    """
+    Creates tracks representing global clock network routes namely all
+    connections between GMUXes and QMUXes as well as QMUXes to CANDs.
+    """
+
+    node_map = {}
+
+    # Get segment id and switch id
+    segment_id = graph.get_segment_id_from_name("clock")
+    switch_id = graph.get_delayless_switch_id()
+
+    # Process connections
+    bar = progressbar_utils.progressbar
+    conns = [c for c in connections if is_clock(c)]
+    for connection in bar(conns):
+
+        # Source is a tile
+        if connection.src.type == ConnectionType.TILE:
+            src_node = connection_loc_to_node.get(connection.src, None)
+            if src_node is None:
+                print(
+                    "WARNING: No OPIN node for clock connection {}".
+                    format(connection)
+                )
+                continue
+
+        # Source is a switchbox. Skip as control inputs of CAND and QMUX are
+        # not to be routed to a switchbox.
+        elif connection.src.type == ConnectionType.SWITCHBOX:
+            continue
+
+        # Source is another global clock cell, do not connect it anywhere now.
+        elif connection.src.type == ConnectionType.CLOCK:
+            src_node = None
+
+        else:
+            assert False, connection
+
+        # Destination is a tile
+        if connection.dst.type == ConnectionType.TILE:
+            dst_node = connection_loc_to_node.get(connection.dst, None)
+            if dst_node is None:
+                print(
+                    "WARNING: No IPIN node for clock connection {}".
+                    format(connection)
+                )
+                continue
+
+        # Destination is another global clock cell, do not connect it anywhere
+        # now.
+        elif connection.dst.type == ConnectionType.CLOCK:
+            dst_node = None
+
+        else:
+            assert False, connection
+
+        # Add a track connecting the two locations
+        # Some CAND cells share the same physical location as QMUX cells.
+        # In that case add a single "jump" node
+        if connection.src.loc == connection.dst.loc:
+            src_track_node = add_node(
+                graph,
+                connection.src.loc,
+                "X",
+                segment_id
+            )
+            dst_track_node = src_track_node
+
+        else:
+            src_track_node, dst_track_node = add_l_track(
+                graph, 
+                connection.src.loc.x, connection.src.loc.y,
+                connection.dst.loc.x, connection.dst.loc.y,
+                segment_id,
+                switch_id
+            )
+
+        # Connect the OPIN
+        if src_node is not None:
+            connect(graph, src_node, src_track_node)
+
+        # Add to the node map.
+        else:
+            ep = connection.src
+
+            # If not already there, add it
+            if ep not in node_map:
+                node_map[ep] = src_track_node
+
+            # Add a connection to model the fan-out
+            else:
+                connect(graph, node_map[ep], src_track_node)
+
+        # Connect the IPIN
+        if dst_node is not None:
+            connect(graph, dst_track_node, dst_node)
+
+        # Add to the node map. Since this is a destination there cannot be any
+        # fan-in.
+        else:
+            ep = connection.dst
+            assert ep not in node_map, ep
+            node_map[ep] = dst_track_node
+
+    return node_map
+
+
+def create_column_clock_tracks(graph, clock_cells, quadrants):
+    """
+    This function adds tracks for clock column routes. It returns a map of
+    "assess points" to that tracks to be used by switchbox connections.
+    """
+
+    CAND_RE = re.compile(r"^(?P<name>CAND[0-4])_(?P<quad>[A-Z]+)_(?P<col>[0-9]+)$")
+
+    # Get segment id and switch id
+    segment_id = graph.get_segment_id_from_name("clock")
+    switch_id = graph.get_delayless_switch_id()
+
+    # Process CAND cells
+    cand_node_map = {}
+
+    for cell in clock_cells.values():
+
+        # A clock column is defined by a CAND cell
+        if cell.type != "CAND":
+            continue
+
+        # Get index and quadrant
+        match = CAND_RE.match(cell.name)
+        if not match:
+            continue
+
+        cand_name = match.group("name")
+        cand_quad = match.group("quad")
+
+        quadrant = quadrants[cand_quad]
+
+        # Add track chains going upwards and downwards from the CAND cell
+        up_entry_node, _, up_node_map = add_track_chain(
+            graph, "Y", cell.loc.x, cell.loc.y,     quadrant.y0, segment_id, switch_id
+        )
+        dn_entry_node, _, dn_node_map = add_track_chain(
+            graph, "Y", cell.loc.x, cell.loc.y + 1, quadrant.y1, segment_id, switch_id
+        )
+
+        # Connect entry nodes
+        cand_entry_node = up_entry_node
+        add_edge(graph, cand_entry_node.id, dn_entry_node.id, switch_id)
+
+        # Join node maps
+        node_map = {**up_node_map, **dn_node_map}
+
+        # Populate the global clock network to switchbox access map
+        for y, node in node_map.items():
+            loc = Loc(x=cell.loc.x, y=y)
+
+            if cand_name not in cand_node_map:
+                cand_node_map[cand_name] = {}
+
+            cand_node_map[cand_name][loc] = node
+
+    return cand_node_map
 
 # =============================================================================
 
@@ -1231,6 +1239,8 @@ def main():
     with open(args.vpr_db, "rb") as fp:
         db = pickle.load(fp)
 
+        vpr_quadrants = db["vpr_quadrants"]
+        vpr_clock_cells = db["vpr_clock_cells"]
         cells_library = db["cells_library"]
         loc_map = db["loc_map"]
         vpr_tile_types = db["vpr_tile_types"]
@@ -1311,25 +1321,101 @@ def main():
     )
     connection_loc_to_node.update(node_map)
 
+    # Build the global clock network
+    print("Building the global clock network...")
+
+    # GMUX to QMUX and QMUX to CAND tracks
+    node_map = create_quadrant_clock_tracks(
+        xml_graph.graph, connections, connection_loc_to_node
+    )
+    connection_loc_to_node.update(node_map)
+
+    # Clock column tracks
+    cand_node_map = create_column_clock_tracks(
+        xml_graph.graph, vpr_clock_cells, vpr_quadrants
+    )
+
     # Add switchbox models.
     print("Building switchbox models...")
     switchbox_models = {}
-    for loc, type in progressbar_utils.progressbar(vpr_switchbox_grid.items()):
 
+    # Gather QMUX cells
+    qmux_cells = {}
+    for cell in vpr_clock_cells.values():
+        if cell.type == "QMUX":
+            loc = cell.loc
+
+            if loc not in qmux_cells:
+                qmux_cells[loc] = {}
+
+            qmux_cells[loc][cell.name] = cell
+
+    # Create the models
+    for loc, type in vpr_switchbox_grid.items():
         phy_loc = loc_map.bwd[loc]
 
-        switchbox_models[loc] = SwitchboxModel(
-            graph=xml_graph.graph,
-            loc=loc,
-            phy_loc=phy_loc,
-            switchbox=vpr_switchbox_types[type],
-        )
+        # QMUX switchbox model
+        if loc in qmux_cells:
+            switchbox_models[loc] = QmuxSwitchboxModel(
+                graph=xml_graph.graph,
+                loc=loc,
+                phy_loc=phy_loc,
+                switchbox=vpr_switchbox_types[type],
+                qmux_cells=qmux_cells[loc],
+                connections=[c for c in connections if is_clock(c)]
+            )
+
+        # Regular switchbox model
+        else:
+            switchbox_models[loc] = SwitchboxModel(
+                graph=xml_graph.graph,
+                loc=loc,
+                phy_loc=phy_loc,
+                switchbox=vpr_switchbox_types[type],
+            )
+
+    # Build switchbox models
+    for switchbox_model in progressbar_utils.progressbar(switchbox_models.values()):
+        switchbox_model.build()
+
+    # Build the global clock network cell models
+    print("Building QMUX and CAND models...")
+
+    # Add QMUX and CAND models
+    for cell in progressbar_utils.progressbar(vpr_clock_cells.values()):
+        phy_loc = loc_map.bwd[cell.loc]
+
+        if cell.type == "QMUX":
+            model = QmuxModel(
+                graph=xml_graph.graph,
+                cell=cell,
+                phy_loc=phy_loc,
+                switchbox_model=switchbox_models[cell.loc],
+                connections=connections,
+                node_map=connection_loc_to_node
+            )
+
+        if cell.type == "CAND":
+            model = CandModel(
+                graph=xml_graph.graph,
+                cell=cell,
+                phy_loc=phy_loc,
+                connections=connections,
+                node_map=connection_loc_to_node,
+                cand_node_map=cand_node_map
+            )
 
     # Populate connections to the switchbox models
     print("Populating connections...")
     populate_hop_connections(xml_graph.graph, switchbox_models, connections)
     populate_tile_connections(
         xml_graph.graph, switchbox_models, connections, connection_loc_to_node
+    )
+    populate_direct_connections(
+        xml_graph.graph, connections, connection_loc_to_node
+    )
+    populate_cand_connections(
+        xml_graph.graph, switchbox_models, cand_node_map
     )
     populate_const_connections(
         xml_graph.graph, switchbox_models, const_node_map
@@ -1378,7 +1464,7 @@ def main():
 
     unconnected_locs = non_empty_locs - connected_locs
     for loc in unconnected_locs:
-        block_type = xml_graph.graph.block_type_ad_loc(loc)
+        block_type = xml_graph.graph.block_type_at_loc(loc)
         print(
             " ERROR: Tile '{}' at ({}, {}) is not connected!".format(
                 block_type, loc[0], loc[1]

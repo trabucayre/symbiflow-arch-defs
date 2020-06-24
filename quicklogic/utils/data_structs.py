@@ -28,7 +28,7 @@ OPPOSITE_DIRECTION = {
 """
 A generic pin
 """
-Pin = namedtuple("Pin", "name direction is_clock")
+Pin = namedtuple("Pin", "name direction attrib")
 """
 Pin direction in therms where is it "standing out" of a tile.
 """
@@ -101,7 +101,7 @@ class TileType(object):
                         Pin(
                             name=name,
                             direction=pin.direction,
-                            is_clock=pin.is_clock
+                            attrib=pin.attrib
                         )
                     )
 
@@ -284,15 +284,17 @@ class Switchbox(object):
 
 
 # =============================================================================
+
 """
-A global clock network mux data.
+A global clock network cell
 
 type        - Cell type.
 name        - Cell name.
 loc         - Location in the grid.
+quadrant    - Clock quadrant
 pin_map     - A dict with mapping of cell pins to switchbox pins.
 """
-ClockMux = namedtuple("ClockMux", "type name loc pin_map")
+ClockCell = namedtuple("ClockCell", "type name loc quadrant pin_map")
 
 # =============================================================================
 
@@ -304,7 +306,8 @@ class ConnectionType(Enum):
     UNSPEC = 0  # Unspecified
     SWITCHBOX = 1  # Connection to a pin of a switchbox
     TILE = 2  # Connection to a pin of a tile
-    SPECIAL = 3  # Connection to a special cell like ASSP, RAM and MULT
+    CLOCK = 3  # Connection to a global clock network cell modelled using 
+               # routing resources only.
 
 
 # A connection endpoint location. Specifies location, pin name and connection

@@ -49,6 +49,16 @@ def parse_library(xml_library):
     Loads cell definitions from the XML
     """
 
+    KNOWN_PORT_ATTRIB = [
+        "hardWired",
+        "isInvertible",
+        "isAsynchronous",
+        "realPortName",
+        "isblank",
+        "io",
+        "unet",
+    ]
+
     cells = []
 
     for xml_node in xml_library:
@@ -82,6 +92,12 @@ def parse_library(xml_library):
                 if not is_routable:
                     continue
 
+                # Gather attributes
+                port_attrib = {}
+                for key, val in xml_mport.attrib.items():
+                    if key in KNOWN_PORT_ATTRIB:
+                        port_attrib[key] = str(val)
+
                 # A bus
                 if xml_bus is not None:
                     lsb = int(xml_bus.attrib["lsb"])
@@ -95,21 +111,41 @@ def parse_library(xml_library):
                                     xml_bus.attrib["name"], i
                                 ),
                                 direction=direction,
-                                is_clock=False,
+                                attrib=port_attrib,
                             )
                         )
 
                 # A single pin
                 else:
                     name = xml_mport.attrib["name"]
+
+                    # HACK: Do not import the CLOCK.OP pin
+                    if cell_type == "CLOCK" and name == "OP":
+                        continue
+
+                    if cell_type in CLOCK_PINS and \
+                       name in CLOCK_PINS[cell_type]:
+                        port_attrib["clock"] = "true"
+
                     cell_pins.append(
                         Pin(
                             name=name,
                             direction=direction,
-                            is_clock=cell_type in CLOCK_PINS
-                            and name in CLOCK_PINS[cell_type],
+                            attrib=port_attrib,
                         )
                     )
+
+        # FIXME: If the cell is a QMUX add the missing QCLKIN1 and QCLKIN2
+        # input pins
+        if cell_type == "QMUX":
+            for i in [1, 2]:
+                cell_pins.append(
+                    Pin(
+                        name = "QCLKIN{}".format(i),
+                        direction = PinDirection.INPUT,
+                        attrib = {"hardWired": "true"}
+                    )
+                )
 
         # Add the cell
         cells.append(CellType(type=cell_type, pins=cell_pins))
@@ -249,7 +285,7 @@ def make_tile_type_name(cells):
         else:
             parts.append("{}x{}".format(c, t))
 
-    return "_".join(parts)
+    return "_".join(parts).upper()
 
 
 def parse_placement(xml_placement, cells_library):
@@ -348,7 +384,7 @@ def parse_placement(xml_placement, cells_library):
             cells=tile_cells
         )
 
-    return tile_types, tilegrid
+    return quadrants, tile_types, tilegrid
 
 
 def populate_switchboxes(xml_sbox, switchbox_grid):
@@ -803,7 +839,7 @@ def parse_clock_network(xml_clock_network):
     Parses the "CLOCK_NETWORK" section of the techfile
     """
 
-    def parse_cell(xml_cell):
+    def parse_cell(xml_cell, quadrant=None):
         """
         Parses a "Cell" tag inside "CLOCK_NETWORK"
         """
@@ -814,13 +850,28 @@ def parse_clock_network(xml_clock_network):
             y=int(xml_cell.attrib["row"]),
         )
 
+        # Get the cell's pinmap
         pin_map = {k: v for k, v in xml_cell.attrib.items() \
             if k not in NON_PIN_TAGS}
 
-        return ClockMux(
+        # FIXME: A QMUX should have 3 QCLKIN inputs but accorting to the
+        # techfile it has only one. Should it be assumed that eg. when
+        # "QCLKIN0=GMUX_1" then "QCLKIN1=GMUX_2" etc ?!?!
+
+        # For now let's assume that yes and add the missing pins
+        if xml_cell.attrib["type"] == "QMUX":
+            gmux_base = int(pin_map["QCLKIN0"].rsplit("_")[1])
+            for i in [1, 2]:
+                key = "QCLKIN{}".format(i)
+                val = "GMUX_{}".format((gmux_base + i) % 5)
+                pin_map[key] = val
+
+        # Return the cell
+        return ClockCell(
             type=xml_cell.attrib["type"],
             name=xml_cell.attrib["name"],
             loc=cell_loc,
+            quadrant=quadrant,
             pin_map=pin_map
         )
 
@@ -840,10 +891,36 @@ def parse_clock_network(xml_clock_network):
 
     for xml_quad in xml_qmux:
         for xml_cell in xml_quad.findall("Cell"):
-            clock_cell = parse_cell(xml_cell)
+            clock_cell = parse_cell(xml_cell, xml_quad.tag)
             clock_cells[clock_cell.name] = clock_cell
 
-    # TODO: Intepret CAND cell data
+    # Parse CAND cells
+    xml_cand = xml_clock_network.find("COL_CLKEN")
+    assert xml_cand is not None
+
+    for xml_quad in xml_cand:
+        for xml_cell in xml_quad.findall("Cell"):
+            clock_cell = parse_cell(xml_cell, xml_quad.tag)
+            clock_cells[clock_cell.name] = clock_cell
+
+    # Since we are not going to use dynamic enables on CAND we remove the EN 
+    # pin connection from the pinmap. This way the connections between 
+    # switchboxes which drive them can be used for generic routing.
+    for cell_name in clock_cells.keys():
+
+        cell = clock_cells[cell_name]
+        pin_map = cell.pin_map
+
+        if cell.type == "CAND" and "EN" in pin_map:
+            del pin_map["EN"]
+
+        clock_cells[cell_name] = ClockCell(
+            name = cell.name,
+            type = cell.type,
+            loc = cell.loc,
+            quadrant = cell.quadrant,
+            pin_map = pin_map
+        )
 
     return clock_cells
 
@@ -880,6 +957,10 @@ def populate_clk_mux_port_maps(
             assert len(cell_pin) == 1, (clock_cell, mux_pin_name)
             cell_pin = cell_pin[0]
 
+            # Skip hard-wired pins
+            if cell_pin.attrib.get("hardWired", None) == "true":
+                continue
+
             # Add entry to the map
             key = (sbox_pin_name, OPPOSITE_DIRECTION[cell_pin.direction])
 
@@ -910,7 +991,11 @@ def specialize_switchboxes_with_port_maps(
         switchbox = switchbox_types[switchbox_type]
 
         # Make a copy of the switchbox
-        new_type = "{}_X{}Y{}".format(switchbox.type, loc.x, loc.y)
+        suffix = "X{}Y{}".format(loc.x, loc.y)
+        if not switchbox.type.endswith(suffix):
+            new_type = "{}_{}".format(switchbox.type, suffix)
+        else:
+            new_type = switchbox_type
         new_switchbox = Switchbox(new_type)
         new_switchbox.stages = deepcopy(switchbox.stages)
         new_switchbox.connections = deepcopy(switchbox.connections)
@@ -976,7 +1061,11 @@ def specialize_switchboxes_with_wire_maps(
         switchbox = switchbox_types[switchbox_type]
 
         # Make a copy of the switchbox
-        new_type = "{}_X{}Y{}".format(switchbox.type, loc.x, loc.y)
+        suffix = "X{}Y{}".format(loc.x, loc.y)
+        if not switchbox.type.endswith(suffix):
+            new_type = "{}_{}".format(switchbox.type, suffix)
+        else:
+            new_type = switchbox_type
         new_switchbox = Switchbox(new_type)
         new_switchbox.stages = deepcopy(switchbox.stages)
         new_switchbox.connections = deepcopy(switchbox.connections)
@@ -1071,7 +1160,7 @@ def parse_pinmap(xml_root, tile_grid):
 
         # Initialize map
         pkg_name = xml_package.attrib["name"]
-        pkg_pin_map = defaultdict(lambda: [])
+        pkg_pin_map = defaultdict(lambda: set())
 
         xml_pins = xml_package.find("Pins")
         assert xml_pins is not None
@@ -1121,9 +1210,22 @@ def parse_pinmap(xml_root, tile_grid):
                     continue
 
                 # Store the mapping
-                pkg_pin_map[pin_name].append(
+                pkg_pin_map[pin_name].add(
                     PackagePin(name=pin_name, loc=cell_loc, cell=cell)
                 )
+
+                # Check if there is a CLOCK cell at the same location
+                cells = [c for c in tile.cells if c.type == "CLOCK"]
+                if len(cells):
+                    assert len(cells) == 1, cells
+
+                    # Store the mapping for the CLOCK cell
+                    pkg_pin_map[pin_name].add(
+                        PackagePin(name=pin_name, loc=cell_loc, cell=cells[0])
+                    )
+
+            # Convert to list
+            pkg_pin_map[pin_name] = list(pkg_pin_map[pin_name])
 
         # Convert to a regular dict
         pin_map[pkg_name] = dict(**pkg_pin_map)
@@ -1152,7 +1254,7 @@ def import_data(xml_root):
     assert xml_placement is not None
 
     cells_library = {cell.type: cell for cell in cells}
-    tile_types, tile_grid = parse_placement(xml_placement, cells_library)
+    quadrants, tile_types, tile_grid = parse_placement(xml_placement, cells_library)
 
     # Import global clock network definition
     xml_clock_network = xml_placement.find("CLOCK_NETWORK")
@@ -1234,6 +1336,7 @@ def import_data(xml_root):
     package_pinmaps = parse_pinmap(xml_packages, tile_grid)
 
     return {
+        "quadrants": quadrants,
         "cells_library": cells_library,
         "tile_types": tile_types,
         "tile_grid": tile_grid,
@@ -1383,9 +1486,11 @@ def main():
 
     # Prepare the database
     db_root = {
+        "phy_quadrants": data["quadrants"],
         "cells_library": data["cells_library"],
         "tile_types": data["tile_types"],
         "phy_tile_grid": data["tile_grid"],
+        "phy_clock_cells": data["clock_cells"],
         "switchbox_types": data["switchbox_types"],
         "switchbox_grid": data["switchbox_grid"],
         "connections": connections,
