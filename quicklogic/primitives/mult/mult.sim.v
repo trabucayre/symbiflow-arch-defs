@@ -17,6 +17,11 @@ module MULT (
 	reg [63:0] Cmult;
 	wire sel_mul_32x32;
 
+    specify
+		(Amult *> Cmult) = "";
+		(Bmult *> Cmult) = "";
+    endspecify
+	
 	always @(*) begin
 		if (sel_mul_32x32 == 1'b1) begin
 			if (Valid_mult[0] == 1'b1) begin

@@ -27,6 +27,17 @@ module T_FRAG (TBS, XAB, XSL, XA1, XA2, XB1, XB2, XZ);
     (* DELAY_CONST_XB1="{iopath_TB1_TZ}" *)
     (* DELAY_CONST_XB2="{iopath_TB2_TZ}" *)
     output wire XZ;
+    
+    specify
+        (TBS => XZ) = "";
+        (XAB => XZ) = "";
+        (XSL => XZ) = "";
+        (XA1 => XZ) = "";
+        (XA2 => XZ) = "";
+        (XB1 => XZ) = "";
+        (XB2 => XZ) = "";
+    endspecify    
+    
 
     // Control parameters
     parameter [0:0] XAS1 = 1'b0;
