@@ -28,8 +28,8 @@ module Q_FRAG(QCK, QST, QRT, QEN, QDI, QDS, CZI, QZ);
 
     // There is no setup/hold for CZI -> QZ. Instead there are setup/hold
     // constraints for other LOGIC inputs. Use the same timing as for QDI
-	(* SETUP="QCK {setup_QCK_CZI}" *) (* NO_COMB *)
-	(* HOLD="QCK {hold_QCK_CZI}" *) (* NO_COMB *)
+	(* SETUP="QCK {setup_QCK_QDI}" *) (* NO_COMB *)
+	(* HOLD="QCK {hold_QCK_QDI}" *) (* NO_COMB *)
     input  wire CZI;
 
 	(* CLK_TO_Q = "QCK {iopath_QCK_QZ}" *)
