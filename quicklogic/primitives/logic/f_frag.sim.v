@@ -1,3 +1,4 @@
+`timescale 1ns/10ps
 (* whitebox *)
 module F_FRAG (F1, F2, FS, FZ);
     input  wire F1;
