@@ -1,9 +1,11 @@
 `timescale 1ns/10ps
 (* whitebox *)
 module fpga_interconnect(
-    input datain,
-    output dataout
-);
+		datain,
+		dataout
+		);
+    input wire datain;
+    output wire dataout;
 
     specify
         (datain=>dataout)="";
