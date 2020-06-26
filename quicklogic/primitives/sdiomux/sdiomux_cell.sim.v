@@ -18,7 +18,7 @@ module SDIOMUX_CELL(
     (* DELAY_CONST_O_EN="{iopath_OE_IP}" *)
     output wire O_PAD_$out;
 	
-	specify
+    specify
         (O_DAT => O_PAD_$out) = "";
         (O_EN => O_PAD_$out) = "";
         (I_PAD_$inp => I_DAT) = "";
