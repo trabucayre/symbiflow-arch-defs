@@ -177,6 +177,7 @@ def build_tile_connections(
                 tile_loc = Loc(
                     x=loc.x + hop[0],
                     y=loc.y + hop[1],
+                    z=loc.z
                 )
 
             # Get the tile
@@ -230,9 +231,9 @@ def build_tile_connections(
             )
 
             if sbox_pin.direction == PinDirection.OUTPUT:
-                connection = Connection(src=src, dst=dst)
+                connection = Connection(src=src, dst=dst, is_direct=False)
             if sbox_pin.direction == PinDirection.INPUT:
-                connection = Connection(src=dst, dst=src)
+                connection = Connection(src=dst, dst=src, is_direct=False)
 
             connections.append(connection)
 
@@ -251,8 +252,8 @@ def build_hop_connections(switchbox_types, switchbox_grid):
     # Determine the switchbox grid limits
     xs = set([loc.x for loc in switchbox_grid.keys()])
     ys = set([loc.y for loc in switchbox_grid.keys()])
-    loc_min = Loc(min(xs), min(ys))
-    loc_max = Loc(max(xs), max(ys))
+    loc_min = Loc(min(xs), min(ys), 0)
+    loc_max = Loc(max(xs), max(ys), 0)
 
     # Identify all connections that go out of switchboxes
     for dst_loc, dst_switchbox_type in switchbox_grid.items():
@@ -272,7 +273,7 @@ def build_hop_connections(switchbox_types, switchbox_grid):
                 continue
 
             # Check if we don't hop outside the FPGA grid.
-            src_loc = Loc(dst_loc.x + hop_ofs[0], dst_loc.y + hop_ofs[1])
+            src_loc = Loc(dst_loc.x + hop_ofs[0], dst_loc.y + hop_ofs[1], 0)
             if src_loc.x < loc_min.x or src_loc.x > loc_max.x:
                 continue
             if src_loc.y < loc_min.y or src_loc.y > loc_max.y:
@@ -321,6 +322,7 @@ def build_hop_connections(switchbox_types, switchbox_grid):
                     pin=dst_pin.name,
                     type=ConnectionType.SWITCHBOX,
                 ),
+                is_direct=False
             )
 
             connections.append(connection)
@@ -410,6 +412,8 @@ def build_gmux_qmux_connections(
                         src_cell.type, src_cell.index, "IC"
                     )
 
+                    is_direct = True
+
                 # Connect to the other cell
                 else:
                     src_loc = other_cell.loc
@@ -429,6 +433,8 @@ def build_gmux_qmux_connections(
                             src_cell.type, src_cell.index, "IZ"
                         )
 
+                    is_direct = False
+
                 # Make the connection
                 connections.append(
                     Connection(
@@ -442,6 +448,7 @@ def build_gmux_qmux_connections(
                             pin=dst_pin_name,
                             type=dst_type
                         ),
+                        is_direct=is_direct
                     )
                 )
 

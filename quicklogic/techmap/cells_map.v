@@ -142,14 +142,60 @@ module ckpad(output Q, input P);
   parameter IO_LOC  = "";
   parameter IO_TYPE = "";
 
-  CLOCK_CELL  _TECHMAP_REPLACE_ (
-  .I_PAD(P),
-  .O_CLK(Q)
-  );
+  // If the IO_TYPE is not set or it is set to CLOCK map the ckpad to a CLOCK
+  // cell.
+  generate if (IO_TYPE == "" || IO_TYPE == "CLOCK") begin
+
+      CLOCK_CELL  _TECHMAP_REPLACE_ (
+      .I_PAD(P),
+      .O_CLK(Q)
+      );
+
+  // Otherwise make it an inpad cell that gets mapped to BIDIR or SDIOMUX
+  end else begin
+
+      inpad #(
+      .IO_PAD(IO_PAD),
+      .IO_LOC(IO_LOC),
+      .IO_TYPE(IO_TYPE)
+      ) _TECHMAP_REPLACE_ (
+      .Q(Q),
+      .P(P)
+      );
+
+  end endgenerate
 
 endmodule
 
 // ============================================================================
+
+module qhsckibuff(input A, output Z);
+
+  // The qhsckibuff is used to reach the global clock network from the regular
+  // routing network. The clock gets inverted.
+
+  wire AI;
+  inv inv (.A(A), .Q(AI));
+
+  GMUX_IC gmux (
+  .IC  (AI),
+  .IZ  (Z),
+  .IS0 (1'b1)
+  );
+
+endmodule
+
+module qhsckbuff(input A, output Z);
+
+  // The qhsckbuff is used to reach the global clock network from the regular
+  // routing network.
+  GMUX_IC _TECHMAP_REPLACE_ (
+  .IC  (A),
+  .IZ  (Z),
+  .IS0 (1'b1)
+  );
+
+endmodule
 
 module gclkbuff(input A, output Z);
 
@@ -162,6 +208,20 @@ module gclkbuff(input A, output Z);
   );
 
 endmodule
+
+module GMUX_PROXY(input IP, output IZ);
+
+  // Map to the GMUX variant for the CLOCK -> GMUX connection. Connect the
+  // select input to VCC.
+  GMUX_IP _TECHMAP_REPLACE_ (
+  .IP  (IP),
+  .IZ  (IZ),
+  .IS0 (1'b1)
+  );
+
+endmodule
+
+// ============================================================================
 
 module C_FRAG (TBS, TAB, TSL, TA1, TA2, TB1, TB2, BAB, BSL, BA1, BA2, BB1, BB2, TZ, CZ);
     input  wire TBS;
@@ -182,6 +242,9 @@ module C_FRAG (TBS, TAB, TSL, TA1, TA2, TB1, TB2, BAB, BSL, BA1, BA2, BB1, BB2, 
 
     output wire TZ;
     output wire CZ;
+
+    // FIXME: There is no guarantee that VPR will pack these together into one
+    // LOGIC
     T_FRAG t_frag (
         .TBS(TBS),
         .XAB(TAB),
@@ -204,6 +267,7 @@ module C_FRAG (TBS, TAB, TSL, TA1, TA2, TB1, TB2, BAB, BSL, BA1, BA2, BB1, BB2, 
     );
 
 endmodule
+
 // ============================================================================
 // logic_cell_macro
 
@@ -300,6 +364,87 @@ module inv (
   .FS(A),
   .FZ(Q)
   );
+endmodule
+
+// ============================================================================
+// Multiplexers
+
+module mux4x0 (
+    output Q,
+    input  S0,
+    input  S1,
+    input  A,
+    input  B,
+    input  C,
+    input  D
+);
+
+  // T_FRAG to be packed either into T_FRAG or B_FRAG.
+  T_FRAG # (
+  .XAS1(1'b0),
+  .XAS2(1'b0),
+  .XBS1(1'b0),
+  .XBS2(1'b0)
+  )
+  t_frag (
+  .TBS(1'b1), // Always route to const1
+  .XAB(S1),
+  .XSL(S0),
+  .XA1(A),
+  .XA2(B),
+  .XB1(C),
+  .XB2(D),
+  .XZ (O)
+  );
+
+endmodule
+
+module mux8x0 (
+    output Q,
+    input  S0,
+    input  S1,
+    input  S2,
+    input  A,
+    input  B,
+    input  C,
+    input  D,
+    input  E,
+    input  F,
+    input  G,
+    input  H
+);
+
+  // Split into 2x mux4x0 plus a F_FRAG
+
+  wire q0, q1;
+
+  mux4x0 mux_0 (
+  .A (A),
+  .B (B),
+  .C (C),
+  .D (D),
+  .S0(S0),
+  .S1(S1),
+  .Q (q0)
+  );
+
+  mux4x0 mux_1 (
+  .A (E),
+  .B (F),
+  .C (G),
+  .D (H),
+  .S0(S0),
+  .S1(S1),
+  .Q (q1)
+  );
+
+  F_FRAG f_frag (
+  .F1(q0),
+  .F2(q1),
+  .FS(S2),
+  .FZ(Q)
+  );
+
 endmodule
 
 // ============================================================================
@@ -464,64 +609,6 @@ module LUT4 (
     .FS(I3),
     .FZ(O)
   );
-
-endmodule
-
-module mux8x0 (
-  output Q,
-  input S0,
-  input S1,
-  input S2,
-  input A,
-  input B,
-  input C,
-  input D,
-  input E,
-  input F,
-  input G,
-  input H
-);
-
-  C_FRAG c_frag (
-    .TBS(S2),
-    .TAB(S1),
-    .TSL(S0),
-    .TA1(A),
-    .TA2(B),
-    .TB1(C),
-    .TB2(D),
-    .BAB(S1),
-    .BSL(S0),
-    .BA1(E),
-    .BA2(F),
-    .BB1(G),
-    .BB2(H),
-    .TZ(),
-    .CZ(Q)
-);
-
-endmodule
-
-module mux4x0 (
-  output Q,
-  input S0,
-  input S1,
-  input A,
-  input B,
-  input C,
-  input D
-);
- // T_FRAG can be mapped to T or B frag
- T_FRAG t_frag (
-  .TBS(1'b1),
-  .XAB(S1),
-  .XSL(S0),
-  .XA1(A),
-  .XA2(B),
-  .XB1(C),
-  .XB2(D),
-  .XZ(Q)
-);
 
 endmodule
 

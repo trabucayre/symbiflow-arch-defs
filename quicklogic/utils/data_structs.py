@@ -43,9 +43,10 @@ class PinSide(Enum):
 
 
 """
-This is a generic location in the tilegrid
+This is a generic location in the tilegrid. Note that it also encounters for
+the sub-tile index z.
 """
-Loc = namedtuple("Loc", "x y")
+Loc = namedtuple("Loc", "x y z")
 """
 FPGA grid quadrant.
 """
@@ -315,7 +316,7 @@ class ConnectionType(Enum):
 ConnectionLoc = namedtuple("ConnectionLoc", "loc pin type")
 
 # A connection within the tilegrid
-Connection = namedtuple("Connection", "src dst")
+Connection = namedtuple("Connection", "src dst is_direct")
 
 # =============================================================================
 """
