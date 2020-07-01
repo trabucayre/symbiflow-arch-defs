@@ -15,6 +15,7 @@ CONSTRAINT_TEMPLATE = '{name:<{nl}} {x: 3} {y: 3} {z: 2}  # {comment}'
 INOUT_REGEX = re.compile(r"^(.+)(_\$inp|_\$out)(.*)$")
 NETNAME_REGEX = re.compile(r"(.+?)(\[[0-9]+\]$|$)")
 
+
 class IoPlace(object):
     def __init__(self):
         self.constraints = OrderedDict()
@@ -103,7 +104,6 @@ class IoPlace(object):
         else:
             block_name = self.net_to_block[net_name]
             return self.block_to_inst[block_name]
-
 
     def constrain_net(self, net_name, loc, comment=""):
         assert len(loc) == 3
