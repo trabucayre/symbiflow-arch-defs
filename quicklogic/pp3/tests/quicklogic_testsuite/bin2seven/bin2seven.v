@@ -1,6 +1,6 @@
 module top(
-    input clock_100Mhz, // 100 Mhz clock source on Basys 3 FPGA
-    input reset, // reset
+    input clock_100Mhz, //100 Mhz clock source on Basys 3 FPGA
+    input reset, //reset
     output reg [3:0] Anode_Activate, // anode signals of the 7-segment LED display
     output reg [6:0] LED_out// cathode patterns of the 7-segment LED display
     );
