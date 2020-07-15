@@ -1,3 +1,4 @@
+//Design for the counter_8bit
 module top ( count, clk, enable, async_set, comb_out ) ;
 
     output [7:0] count ;
