@@ -384,12 +384,12 @@ class Graph(object):
         }
         self._write_xml_tag("channel", attrib)
 
-        for l in channels.x_list:
-            self._write_xml_tag("x_list", {"index": l.index, "info": l.info})
+        for lm in channels.x_list:
+            self._write_xml_tag("x_list", {"index": lm.index, "info": lm.info})
             if DEBUG >= 2:
                 break
-        for l in channels.y_list:
-            self._write_xml_tag("y_list", {"index": l.index, "info": l.info})
+        for lm in channels.y_list:
+            self._write_xml_tag("y_list", {"index": lm.index, "info": lm.info})
             if DEBUG >= 2:
                 break
 

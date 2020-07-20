@@ -90,7 +90,8 @@ def main():
     for pcf_constraint in parse_simple_pcf(args.pcf):
         if not io_place.is_net(pcf_constraint.net):
             print(
-                'PCF constraint "{}" from line {} constraints net {} which is not in available netlist:\n{}'
+                'PCF constraint "{}" from line {} constraints net {} \
+which is not in available netlist:\n{}'
                 .format(
                     pcf_constraint.line_str, pcf_constraint.line_num,
                     pcf_constraint.net, '\n'.join(io_place.get_nets())
@@ -101,7 +102,8 @@ def main():
 
         if pcf_constraint.pad not in pad_map:
             print(
-                'PCF constraint "{}" from line {} constraints pad {} which is not in available pad map:\n{}'
+                'PCF constraint "{}" from line {} constraints pad {} \
+which is not in available pad map:\n{}'
                 .format(
                     pcf_constraint.line_str, pcf_constraint.line_num,
                     pcf_constraint.pad, '\n'.join(sorted(pad_map.keys()))
@@ -124,7 +126,8 @@ def main():
         locs = pad_map[pcf_constraint.pad]
         if inst not in locs:
             print(
-                'PCF constraint "{}" from line {} constraints net {} of a block type {} to a location for block types:\n{}'
+                'PCF constraint "{}" from line {} constraints net {} \
+of a block type {} to a location for block types:\n{}'
                 .format(
                     pcf_constraint.line_str, pcf_constraint.line_num,
                     pcf_constraint.net, inst,

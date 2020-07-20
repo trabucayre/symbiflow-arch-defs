@@ -212,7 +212,8 @@ def main():
                 continue
 
             # Detect inouts:
-            if constraint.net + '_$inp' in eblif_inputs and constraint.net + '_$out' in eblif_outputs:
+            if constraint.net + '_$inp' in eblif_inputs and constraint.net \
+               + '_$out' in eblif_outputs:
                 pad_config = {
                     "ctrl_sel": "fabric",
                     "mode": "inout",

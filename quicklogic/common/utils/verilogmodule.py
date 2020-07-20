@@ -1,11 +1,10 @@
 import re
 from collections import namedtuple, defaultdict
+from data_structs import PinDirection
 
 Element = namedtuple('Element', 'loc type name ios')
 Wire = namedtuple('Wire', 'srcloc name inverted')
 VerilogIO = namedtuple('VerilogIO', 'name direction ioloc')
-
-from data_structs import PinDirection
 
 
 def loc2str(loc):
@@ -183,7 +182,7 @@ class VModule(object):
         return newparameters
 
     def form_simple_assign(self, loc, parameters):
-        bloc = loc2str(loc)
+        # bloc = loc2str(loc)
         ioname = self.get_io_name(loc)
 
         assign = ""
@@ -271,7 +270,7 @@ class VModule(object):
 
         # handle BIDIRs and CLOCKs
         if typ in ['CLOCK', 'BIDIR']:
-            bloc = loc2str(loc)
+            # bloc = loc2str(loc)
             ioname = self.get_io_name(loc)
 
             moduletype = self.qlal4s3bmapping[typ]
@@ -302,7 +301,7 @@ class VModule(object):
         with bel types and connections to them
         '''
 
-        tile_type = self.vpr_tile_grid[loc].type
+        # tile_type = self.vpr_tile_grid[loc].type
         cells = self.vpr_tile_grid[loc].cells
 
         if type(connections) == str:
@@ -333,7 +332,7 @@ class VModule(object):
             ]
 
             # check every connection pin if it has
-            cell_fit = True
+            # cell_fit = True
             for pin in cellpins:
 
                 # Cell name and pin name match
@@ -363,7 +362,7 @@ class VModule(object):
                 if key in cellpins:
                     cell_connections[cell_name][key] = connections[key]
 
-                # Some switchbox inputs are named like 
+                # Some switchbox inputs are named like
                 # "<cell><cell_index>_<pin>". Break down the name and check.
                 fields = key.split("_", maxsplit=1)
                 if len(fields) == 2:
@@ -452,10 +451,9 @@ class VModule(object):
                 wirename = f'{srcname}_{srconame}'
             if srctype not in self.elements[wire[0]]:
                 # if the source element does not exist, create it
-                self.elements[wire[0]][srctype] = Element(
-                    wire[0], self.get_element_type(srctype), self.get_element_name(srctype, wire[0]),
-                    {srconame: wirename}
-                )
+                self.elements[wire[0]][srctype] = Element(wire[0], self.get_element_type(srctype),
+                                                          self.get_element_name(srctype, wire[0]),
+                                                          {srconame: wirename})
             else:
                 # add wirename to the existing element
                 self.elements[wire[0]][srctype].ios[srconame] = wirename
@@ -574,7 +572,7 @@ class VModule(object):
 
         # default pin name
         name = loc2str(loc) + '_inout'
-        wirename = name
+        # wirename = name
         # check if we have the original name for this io
         if self.pcf_data is not None:
             pin = self.io_to_fbio[loc]
@@ -633,8 +631,8 @@ class VModule(object):
                     )
 
                     # keep the original wire name for generating the wireid
-                    #wireid = Wire(name, "inout_pin", False)
-                    #self.wires[wireid] = name
+                    # wireid = Wire(name, "inout_pin", False)
+                    # self.wires[wireid] = name
 
     def generate_verilog(self):
         '''Creates Verilog module

@@ -62,9 +62,9 @@ def main():
         params[k] = v
 
     with open(args.output, 'w') as f_out, open(args.template) as f:
-        for l in f:
-            localparam_m = LOCALPARAM_RE.match(l)
-            dumpfile_m = DUMPFILE_RE.match(l)
+        for lm in f:
+            localparam_m = LOCALPARAM_RE.match(lm)
+            dumpfile_m = DUMPFILE_RE.match(lm)
             if localparam_m:
                 prefix_ws = localparam_m.group(1)
                 param = localparam_m.group(2)
@@ -77,7 +77,7 @@ def main():
                         file=f_out
                     )
                 else:
-                    print(l.rstrip(), file=f_out)
+                    print(lm.rstrip(), file=f_out)
             elif dumpfile_m:
                 prefix_ws = dumpfile_m.group(1)
                 base = os.path.basename(args.output)
@@ -87,7 +87,7 @@ def main():
                     file=f_out
                 )
             else:
-                print(l.rstrip(), file=f_out)
+                print(lm.rstrip(), file=f_out)
 
 
 if __name__ == "__main__":

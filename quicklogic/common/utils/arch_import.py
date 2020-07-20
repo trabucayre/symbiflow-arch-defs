@@ -2,12 +2,11 @@
 import os
 import argparse
 import pickle
-from collections import namedtuple
 from collections import OrderedDict
 
 import lxml.etree as ET
 
-from data_structs import *
+from data_structs import ConnectionType, Loc
 
 from tile_import import make_top_level_pb_type
 from tile_import import make_top_level_tile
@@ -388,7 +387,7 @@ def main():
     with open(args.vpr_db, "rb") as fp:
         db = pickle.load(fp)
 
-        cells_library = db["cells_library"]
+        # cells_library = db["cells_library"]
         loc_map = db["loc_map"]
         vpr_tile_types = db["vpr_tile_types"]
         vpr_tile_grid = db["vpr_tile_grid"]

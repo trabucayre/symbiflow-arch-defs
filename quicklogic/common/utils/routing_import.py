@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import argparse
 import pickle
-import itertools
+# import itertools
 import re
 
-import lxml.etree as ET
+# import lxml.etree as ET
 
 from lib.rr_graph import tracks
 import lib.rr_graph.graph2 as rr
 import lib.rr_graph_xml.graph2 as rr_xml
 from lib import progressbar_utils
 
-from data_structs import *
+from data_structs import ConnectionType, cell, Loc
 from utils import fixup_pin_name
 
 from rr_utils import add_node, add_track, add_edge, connect
@@ -225,7 +225,7 @@ class QmuxModel(object):
             switch_id = get_vpr_switch_for_clock_cell(
                 self.graph,
                 self.cell,
-                #pin,
+                # pin,
                 "QCLKIN0",  # FIXME: Always use the QCLKIN0->IZ timing here
                 "IZ"
             )
@@ -272,7 +272,7 @@ class QmuxModel(object):
         prefix = "X{}Y{}.QMUX.QMUX".format(self.phy_loc.x, self.phy_loc.y)
 
         # Get cell index
-        index = int(self.cell.name[-1])
+        # index = int(self.cell.name[-1])
 
         # Collect features
         for pin, net in pins.items():
@@ -665,12 +665,10 @@ def add_track_chain(graph, direction, u, v0, v1, segment_id, switch_id):
 
 def add_tracks_for_const_network(graph, const, tile_grid):
     """
-    Builds a network of CHANX/CHANY and edges to propagate signal from a 
+    Builds a network of CHANX/CHANY and edges to propagate signal from a
     const source.
-    
     The const network is purely artificial and does not correspond to any
     physical routing resources.
-
     Returns a map of const network nodes for each location.
     """
 
@@ -1271,14 +1269,14 @@ def main():
 
         vpr_quadrants = db["vpr_quadrants"]
         vpr_clock_cells = db["vpr_clock_cells"]
-        cells_library = db["cells_library"]
+        # cells_library = db["cells_library"]
         loc_map = db["loc_map"]
-        vpr_tile_types = db["vpr_tile_types"]
+        # vpr_tile_types = db["vpr_tile_types"]
         vpr_tile_grid = db["vpr_tile_grid"]
         vpr_switchbox_types = db["vpr_switchbox_types"]
         vpr_switchbox_grid = db["vpr_switchbox_grid"]
         connections = db["connections"]
-        segments = db["segments"]
+        # segments = db["segments"]
         switches = db["switches"]
 
     # Load the routing graph, build SOURCE -> OPIN and IPIN -> SINK edges.
@@ -1330,9 +1328,7 @@ def main():
     nodes_by_id = {node.id: node for node in xml_graph.graph.nodes}
 
     # Build tile pin names to rr node ids map
-    tile_pin_to_node = build_tile_pin_to_node_map(
-        xml_graph.graph, vpr_tile_types, vpr_tile_grid
-    )
+    # tile_pin_to_node = build_tile_pin_to_node_map(xml_graph.graph, vpr_tile_types, vpr_tile_grid)
 
     # Add const network
     const_node_map = {}
@@ -1488,7 +1484,7 @@ def main():
             loc = (src.loc.x_low, src.loc.y_low)
             connected_locs.add(loc)
 
-    non_empty_locs = set((loc.x, loc.y) for loc in xml_graph.graph.grid \
+    non_empty_locs = set((loc.x, loc.y) for loc in xml_graph.graph.grid
                          if loc.block_type_id > 0)
 
     unconnected_locs = non_empty_locs - connected_locs

@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from data_structs import *
+from data_structs import PinDirection, ConnectionType
 from utils import yield_muxes
 from rr_utils import add_node, connect
 
@@ -75,7 +75,7 @@ class SwitchboxModel(object):
         """
         Returns the SwitchboxConnection object that spans two muxes given their
         locations. Parameters src and dst should be tuples containing:
-        (stage_id, switch_id, mux_id)        
+        (stage_id, switch_id, mux_id)
         """
 
         for connection in switchbox.connections:
@@ -98,7 +98,7 @@ class SwitchboxModel(object):
         """
         Returns a list of routes inside the switchbox that connect the given
         output pin with the given input pin.
-        
+
         Returns a list of lists. Each inner list contain tuples with
         (stage_id, switch_id, mux_id, pin_id)
         """
@@ -131,9 +131,9 @@ class SwitchboxModel(object):
             # Get its input connections
             connections = {}
             for connection in switchbox.connections:
-                if connection.dst.stage_id  == stage_id and \
+                if connection.dst.stage_id == stage_id and \
                    connection.dst.switch_id == switch_id and \
-                   connection.dst.mux_id    == mux_id:
+                   connection.dst.mux_id == mux_id:
                     connections[connection.dst.pin_id] = connection
 
             # Expand all its inputs
@@ -209,7 +209,7 @@ class SwitchboxModel(object):
         driver_timing = {}
         for connection in self.switchbox.connections:
             src = connection.src
-            dst = connection.dst
+            # dst = connection.dst
 
             stage = self.switchbox.stages[src.stage_id]
             switch = stage.switches[src.switch_id]
@@ -560,7 +560,6 @@ class QmuxSwitchboxModel(SwitchboxModel):
                             routes.append(route)
 
                     pin_routes[net] = routes
-
 
 #               print(cell_name, pin)
 #               for r in pin_routes["GND"]:

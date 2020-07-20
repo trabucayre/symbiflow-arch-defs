@@ -44,10 +44,9 @@ def process_includes(file, includes_list):
 
     rel_file_name = path.relpath(file_name)
 
-    result = \
-            f'// {rel_file_name} {{{{{{\n' + \
-            include_re.sub(process_match, code) + \
-            f'// {rel_file_name} }}}}}}\n'
+    result = f'// {rel_file_name} {{{{{{\n' + \
+             include_re.sub(process_match, code) + \
+             f'// {rel_file_name} }}}}}}\n'
     return result
 
 
@@ -57,8 +56,8 @@ def main(argv):
 
     includes_list = []
 
-    print(*(process_includes(f, includes_list) for f in args.inputfile), \
-            sep='\n', end='', file=args.outputfile)
+    print(*(process_includes(f, includes_list) for f in args.inputfile),
+          sep='\n', end='', file=args.outputfile)
 
     return 0
 

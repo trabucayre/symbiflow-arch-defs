@@ -30,13 +30,13 @@ proc animate {idx node_length} {
 
     final_route = []
 
-    for l in sys.stdin:
-        m = POP_RE.search(l)
+    for lm in sys.stdin:
+        m = POP_RE.search(lm)
 
         if m:
             wires.append(m.group(1))
 
-        m = PIN_RE.search(l)
+        m = PIN_RE.search(lm)
         if m:
             if m.group(3) == '*':
                 continue

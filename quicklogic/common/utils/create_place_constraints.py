@@ -102,10 +102,10 @@ def main():
         # Search for a CLOCK cell connected to that net
         for cell in eblif_data["subckt"]:
             if cell["type"] == "subckt" and cell["args"][0] == IOB_CELL[0]:
-                pattern = "{}={}".format(IOB_CELL[1], inp_net)
+                # pattern = "{}={}".format(IOB_CELL[1], inp_net)
 
                 try:
-                    idx = cell["args"].index(pattern)
+                    # idx = cell["args"].index(pattern)
                     iob_cell = cell
                     break
                 except ValueError:
@@ -128,10 +128,10 @@ def main():
         # Search for a GMUX connected to the CLOCK cell
         for cell in eblif_data["subckt"]:
             if cell["type"] == "subckt" and cell["args"][0] == BUF_CELL[0]:
-                pattern = "{}={}".format(BUF_CELL[1], con_net)
+                # pattern = "{}={}".format(BUF_CELL[1], con_net)
 
                 try:
-                    idx = cell["args"].index(pattern)
+                    # idx = cell["args"].index(pattern)
                     buf_cell = cell
                     break
                 except ValueError:
