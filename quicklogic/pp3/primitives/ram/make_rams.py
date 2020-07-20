@@ -827,6 +827,7 @@ def auto_interconnect(pb_type):
         for port in pb.findall(type):
             yield port.attrib["name"], int(port.attrib["num_pins"]),
 
+    child = ""
     # Get parent for the interconnect (can be either "mode" or "pb_type")
     if pb_type.tag == "mode":
         ic_parent = pb_type

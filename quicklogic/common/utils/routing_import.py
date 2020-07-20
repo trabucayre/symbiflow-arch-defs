@@ -1156,14 +1156,14 @@ def create_column_clock_tracks(graph, clock_cells, quadrants):
     # Process CAND cells
     cand_node_map = {}
 
-    for cell in clock_cells.values():
+    for cell_l in clock_cells.values():
 
         # A clock column is defined by a CAND cell
-        if cell.type != "CAND":
+        if cell_l.type != "CAND":
             continue
 
         # Get index and quadrant
-        match = CAND_RE.match(cell.name)
+        match = CAND_RE.match(cell_l.name)
         if not match:
             continue
 
@@ -1174,11 +1174,11 @@ def create_column_clock_tracks(graph, clock_cells, quadrants):
 
         # Add track chains going upwards and downwards from the CAND cell
         up_entry_node, _, up_node_map = add_track_chain(
-            graph, "Y", cell.loc.x, cell.loc.y, quadrant.y0, segment_id,
+            graph, "Y", cell_l.loc.x, cell_l.loc.y, quadrant.y0, segment_id,
             switch_id
         )
         dn_entry_node, _, dn_node_map = add_track_chain(
-            graph, "Y", cell.loc.x, cell.loc.y + 1, quadrant.y1, segment_id,
+            graph, "Y", cell_l.loc.x, cell_l.loc.y + 1, quadrant.y1, segment_id,
             switch_id
         )
 
@@ -1191,7 +1191,7 @@ def create_column_clock_tracks(graph, clock_cells, quadrants):
 
         # Populate the global clock network to switchbox access map
         for y, node in node_map.items():
-            loc = Loc(x=cell.loc.x, y=y, z=0)
+            loc = Loc(x=cell_l.loc.x, y=y, z=0)
 
             if cand_name not in cand_node_map:
                 cand_node_map[cand_name] = {}
@@ -1367,14 +1367,14 @@ def main():
 
     # Gather QMUX cells
     qmux_cells = {}
-    for cell in vpr_clock_cells.values():
-        if cell.type == "QMUX":
-            loc = cell.loc
+    for cell_lm in vpr_clock_cells.values():
+        if cell_lm.type == "QMUX":
+            loc = cell_lm.loc
 
             if loc not in qmux_cells:
                 qmux_cells[loc] = {}
 
-            qmux_cells[loc][cell.name] = cell
+            qmux_cells[loc][cell_lm.name] = cell_lm
 
     # Create the models
     for loc, type in vpr_switchbox_grid.items():
@@ -1409,28 +1409,28 @@ def main():
     print("Building QMUX and CAND models...")
 
     # Add QMUX and CAND models
-    for cell in progressbar_utils.progressbar(vpr_clock_cells.values()):
-        phy_loc = loc_map.bwd[cell.loc]
+    for cell_lm in progressbar_utils.progressbar(vpr_clock_cells.values()):
+        phy_loc = loc_map.bwd[cell_lm.loc]
 
-        if cell.type == "QMUX":
-            model = QmuxModel(
-                graph=xml_graph.graph,
-                cell=cell,
-                phy_loc=phy_loc,
-                switchbox_model=switchbox_models[cell.loc],
-                connections=connections,
-                node_map=connection_loc_to_node
-            )
+        # if cell_lm.type == "QMUX":
+        #    model = QmuxModel(
+        #        graph=xml_graph.graph,
+        #        cell_lm=cell_lm,
+        #        phy_loc=phy_loc,
+        #        switchbox_model=switchbox_models[cell_lm.loc],
+        #        connections=connections,
+        #        node_map=connection_loc_to_node
+        #    )
 
-        if cell.type == "CAND":
-            model = CandModel(
-                graph=xml_graph.graph,
-                cell=cell,
-                phy_loc=phy_loc,
-                connections=connections,
-                node_map=connection_loc_to_node,
-                cand_node_map=cand_node_map
-            )
+        # if cell_lm.type == "CAND":
+        #    model = CandModel(
+        #        graph=xml_graph.graph,
+        #        cell_lm=cell_lm,
+        #        phy_loc=phy_loc,
+        #        connections=connections,
+        #        node_map=connection_loc_to_node,
+        #        cand_node_map=cand_node_map
+        #    )
 
     # Populate connections to the switchbox models
     print("Populating connections...")
@@ -1499,7 +1499,10 @@ def main():
     # Write the routing graph
     nodes_obj = xml_graph.graph.nodes
     edges_obj = xml_graph.graph.edges
-    node_remap = lambda x: x
+    # node_remap = lambda x: x
+
+    def node_remap(x):
+        return x
 
     print("Serializing the rr graph...")
     xml_graph.serialize_to_xml(
