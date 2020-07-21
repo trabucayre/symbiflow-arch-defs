@@ -33,9 +33,10 @@ make_target check_python "Check code formatting"
 
 #make_target lint_python "Check code style"
 
-$SPACER
+#Below target does not exists
+#$SPACER
 
-make_target all_v2x_tests "Run v2x unit tests"
+#make_target all_v2x_tests "Run v2x unit tests"
 
 $SPACER
 
