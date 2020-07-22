@@ -54,9 +54,9 @@ make_target check_python "Check code formatting"
 
 #make_target all_v2x_tests "Run v2x unit tests"
 
-$SPACER
+#$SPACER
 
-make_target test_python "Run Python unit tests"
+#make_target test_python "Run Python unit tests"
 
 #$SPACER
 
@@ -95,4 +95,4 @@ $SPACER
 echo "Running quicklogic testsuit"
 
 cd quicklogic/pp3/tests
-make_target all_ql_tests
+make_target all_quick_tests
