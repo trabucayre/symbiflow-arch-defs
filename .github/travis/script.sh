@@ -36,7 +36,7 @@ end_section "symbiflow.configure_cmake"
 
 $SPACER
 
-ninja all_conda -j$(nproc)
+ninja all_conda -j10
 
 $SPACER
 
