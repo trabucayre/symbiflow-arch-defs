@@ -10,7 +10,7 @@ git clone https://github.com/QuickLogic-Corp/yosys.git -b quicklogic-rebased qui
 cd quicklogic-yosys
 sed -i 's/CONFIG := clang/CONFIG := gcc/g' Makefile
 #make config-gcc
-make install -j10 PREFIX=$HOME/antmicro_install
+make install make -j$(nproc) PREFIX=$HOME/antmicro_install
 cd -
 export PATH=~/antmicro_install/bin:$PATH
 git clone https://github.com/QuickLogic-Corp/yosys-symbiflow-plugins -b ql-ios
@@ -18,6 +18,14 @@ cd yosys-symbiflow-plugins
 make install
 cd -
 export YOSYS=$HOME/antmicro_install/bin/yosys
+
+#setup install path
+INSTALL_DIR="$(pwd)/install"
+
+#setup ninja
+export CMAKE_FLAGS="-GNinja -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
+export BUILD_TOOL=ninja
+source .github/travis/common.sh
 
 $SPACER
 
@@ -28,7 +36,7 @@ end_section "symbiflow.configure_cmake"
 
 $SPACER
 
-make_target all_conda "Setting up basic ${YELLOW}conda environment${NC}"
+ninja all_conda -j$(nproc)
 
 $SPACER
 
@@ -92,7 +100,13 @@ $SPACER
 
 $SPACER
 
-echo "Running quicklogic testsuit"
-
-cd quicklogic/pp3/tests
-make_target all_quick_tests -j10
+echo "==================================================="
+echo "Running quicklogic testsuit (make all_quick_tests)"
+echo "---------------------------------------------------"
+(
+pushd build
+export VPR_NUM_WORKERS=$(nproc)
+ninja -j$(nproc) all_quick_tests
+popd
+)
+echo "--------------------------------------------------"
