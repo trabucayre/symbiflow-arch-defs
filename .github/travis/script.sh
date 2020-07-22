@@ -95,4 +95,4 @@ $SPACER
 echo "Running quicklogic testsuit"
 
 cd quicklogic/pp3/tests
-make_target all_quick_tests
+make_target all_quick_tests -j10
