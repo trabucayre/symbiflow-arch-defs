@@ -21,6 +21,10 @@ export YOSYS=$HOME/yosys_install/bin/yosys
 #setup install path
 INSTALL_DIR="$(pwd)/install"
 
+#setup ninja
+export CMAKE_FLAGS="-GNinja -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
+export BUILD_TOOL=ninja
+
 $SPACER
 
 start_section "symbiflow.configure_cmake" "Configuring CMake (make env)"
