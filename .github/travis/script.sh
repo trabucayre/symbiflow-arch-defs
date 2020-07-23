@@ -106,7 +106,7 @@ echo "----------------------------------------"
 (
 #	pushd build
 	export VPR_NUM_WORKERS=${nproc}
-	ninja -j10 all_quick_tests
+	ninja all_quick_tests
 #	popd
 )
 echo "----------------------------------------"
