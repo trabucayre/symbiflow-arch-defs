@@ -34,7 +34,8 @@ end_section "symbiflow.configure_cmake"
 
 $SPACER
 
-make_target all_conda "Setting up basic ${YELLOW}conda environment${NC}"
+ninja -j10 all_conda
+#make_target all_conda "Setting up basic ${YELLOW}conda environment${NC}"
 
 $SPACER
 
@@ -100,5 +101,6 @@ $SPACER
 
 echo "Running quicklogic testsuit"
 
-cd quicklogic/pp3/tests
+#cd quicklogic/pp3/tests
+
 #make_target all_quick_tests -j10
