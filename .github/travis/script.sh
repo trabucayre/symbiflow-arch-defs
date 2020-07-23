@@ -48,9 +48,9 @@ start_section "info.conda.config" "Info on ${YELLOW}conda config${NC}"
 env/conda/bin/conda config --show
 end_section "info.conda.config"
 
-$SPACER
+#$SPACER
 
-make_target check_python "Check code formatting"
+#make_target check_python "Check code formatting"
 
 #$SPACER
 
@@ -102,5 +102,12 @@ $SPACER
 echo "Running quicklogic testsuit"
 
 #cd quicklogic/pp3/tests
-
+echo "----------------------------------------"
+(
+	pushd build
+	export VPR_NUM_WORKERS=${nproc}
+	ninja -j10 all_quick_tests
+	popd
+)
+echo "----------------------------------------"
 #make_target all_quick_tests -j10
