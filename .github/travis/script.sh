@@ -8,9 +8,8 @@ $SPACER
 mkdir $HOME/yosys_install
 git clone https://github.com/QuickLogic-Corp/yosys.git -b quicklogic-rebased quicklogic-yosys
 cd quicklogic-yosys
-sed -i 's/CONFIG := clang/CONFIG := gcc/g' Makefile
-#make config-gcc
-make install -j10 PREFIX=$HOME/yosys_install
+make config-gcc
+make install -j$(nproc) PREFIX=$HOME/yosys_install
 cd -
 export PATH=~/yosys_install/bin:$PATH
 git clone https://github.com/QuickLogic-Corp/yosys-symbiflow-plugins -b ql-ios
@@ -21,12 +20,6 @@ export YOSYS=$HOME/yosys_install/bin/yosys
 
 #setup install path
 INSTALL_DIR="$(pwd)/install"
-
-#setup ninja
-export CMAKE_FLAGS="-GNinja -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
-export BUILD_TOOL=ninja
-export VPR_NUM_WORKERS=$(nproc)
-source .github/travis/common.sh
 
 $SPACER
 
