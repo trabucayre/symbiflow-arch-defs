@@ -85,7 +85,7 @@ end_section "info.conda.config"
 #echo "Suppressing some xml linting, as the 5k/8k parts cannot be built on travis."
 #make_target all_xml_lint "Complete all xmllint"
 
-$SPACER
+#$SPACER
 
 # TODO: Check tests are broken, yosys regression?
 #start_section "symbiflow.run_check_tests" "Complete all equivalence tests"
@@ -104,10 +104,10 @@ echo "Running quicklogic testsuit"
 #cd quicklogic/pp3/tests
 echo "----------------------------------------"
 (
-	pushd build
+#	pushd build
 	export VPR_NUM_WORKERS=${nproc}
 	ninja -j10 all_quick_tests
-	popd
+#	popd
 )
 echo "----------------------------------------"
 #make_target all_quick_tests -j10
