@@ -17,6 +17,12 @@ cd yosys-symbiflow-plugins
 make install
 cd -
 export YOSYS=$HOME/yosys_install/bin/yosys
+git clone https://github.com/QuickLogic-Corp/vtr-verilog-to-routing -b blackbox_timing
+cd vtr-verilog-to-routing
+make
+export VPR=$(pwd)/build/vpr/vpr
+export GENFASM=$(pwd)/build/utils/fasm/genfasm
+cd -
 
 #setup install path
 INSTALL_DIR="$(pwd)/install"
