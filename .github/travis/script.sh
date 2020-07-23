@@ -19,7 +19,7 @@ cd -
 export YOSYS=$HOME/yosys_install/bin/yosys
 git clone https://github.com/QuickLogic-Corp/vtr-verilog-to-routing -b blackbox_timing
 cd vtr-verilog-to-routing
-make
+make -j$(nproc)
 export VPR=$(pwd)/build/vpr/vpr
 export GENFASM=$(pwd)/build/utils/fasm/genfasm
 cd -
@@ -40,7 +40,7 @@ end_section "symbiflow.configure_cmake"
 
 $SPACER
 
-ninja -j10 all_conda
+ninja -j$(nproc) all_conda
 #make_target all_conda "Setting up basic ${YELLOW}conda environment${NC}"
 
 $SPACER
@@ -112,7 +112,7 @@ echo "----------------------------------------"
 (
 #	pushd build
 	export VPR_NUM_WORKERS=${nproc}
-	ninja all_quick_tests
+	ninja -j$(nproc) all_quick_tests
 #	popd
 )
 echo "----------------------------------------"
