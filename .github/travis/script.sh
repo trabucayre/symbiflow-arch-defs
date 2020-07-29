@@ -17,12 +17,12 @@ cd yosys-symbiflow-plugins
 make install
 cd -
 export YOSYS=$HOME/yosys_install/bin/yosys
-git clone https://github.com/QuickLogic-Corp/vtr-verilog-to-routing -b blackbox_timing
-cd vtr-verilog-to-routing
-make -j$(nproc)
-export VPR=$(pwd)/build/vpr/vpr
-export GENFASM=$(pwd)/build/utils/fasm/genfasm
-cd -
+#git clone https://github.com/QuickLogic-Corp/vtr-verilog-to-routing -b blackbox_timing
+#cd vtr-verilog-to-routing
+#make -j$(nproc)
+#export VPR=$(pwd)/build/vpr/vpr
+#export GENFASM=$(pwd)/build/utils/fasm/genfasm
+#cd -
 
 #setup install path
 INSTALL_DIR="$(pwd)/install"
@@ -53,55 +53,6 @@ end_section "info.conda.env"
 start_section "info.conda.config" "Info on ${YELLOW}conda config${NC}"
 env/conda/bin/conda config --show
 end_section "info.conda.config"
-
-#$SPACER
-
-#make_target check_python "Check code formatting"
-
-#$SPACER
-
-#make_target lint_python "Check code style"
-
-#Below target does not exists
-#$SPACER
-
-#make_target all_v2x_tests "Run v2x unit tests"
-
-#$SPACER
-
-#make_target test_python "Run Python unit tests"
-
-#$SPACER
-
-#make_target all_merged_arch_xmls "Build all arch XMLs"
-
-#$SPACER
-
-#echo "Suppressing all_rrgraph_xmls generation, as the 8k parts cannot be built on travis."
-#start_section "symbiflow.build_all_rrgraph_xmls" "Build all rrgraph XMLs."
-#make all_rrgraph_xmls
-#end_section "symbiflow.build_all_rrgraph_xmls"
-
-#$SPACER
-
-#make_target all_route_tests "Complete all routing tests"
-
-#$SPACER
-
-#echo "Suppressing some xml linting, as the 5k/8k parts cannot be built on travis."
-#make_target all_xml_lint "Complete all xmllint"
-
-#$SPACER
-
-# TODO: Check tests are broken, yosys regression?
-#start_section "symbiflow.run_check_tests" "Complete all equivalence tests"
-#make all_check_tests
-#end_section "symbiflow.run_check_tests"
-
-#$SPACER
-
-#echo "Suppressing some demo bitstreams, as the 8k parts cannot be built on travis."
-#make_target all "Building all demo bitstreams"
 
 $SPACER
 
