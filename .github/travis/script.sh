@@ -5,24 +5,6 @@ set -e
 
 $SPACER
 # Generate yosys binary for the branch quicklogic-rebased
-mkdir $HOME/yosys_install
-git clone https://github.com/QuickLogic-Corp/yosys.git -b quicklogic-rebased quicklogic-yosys
-cd quicklogic-yosys
-make config-gcc
-make install -j$(nproc) PREFIX=$HOME/yosys_install
-cd -
-export PATH=~/yosys_install/bin:$PATH
-git clone https://github.com/QuickLogic-Corp/yosys-symbiflow-plugins -b ql-ios
-cd yosys-symbiflow-plugins
-make install
-cd -
-export YOSYS=$HOME/yosys_install/bin/yosys
-#git clone https://github.com/QuickLogic-Corp/vtr-verilog-to-routing -b blackbox_timing
-#cd vtr-verilog-to-routing
-#make -j$(nproc)
-#export VPR=$(pwd)/build/vpr/vpr
-#export GENFASM=$(pwd)/build/utils/fasm/genfasm
-#cd -
 
 #setup install path
 INSTALL_DIR="$(pwd)/install"
@@ -42,9 +24,9 @@ $SPACER
 
 ninja -j$(nproc) all_conda
 #make_target all_conda "Setting up basic ${YELLOW}conda environment${NC}"
+cp -r env/conda/share/yosys/* env/conda/share
 
 $SPACER
-
 # Output some useful info
 start_section "info.conda.env" "Info on ${YELLOW}conda environment${NC}"
 env/conda/bin/conda info
