@@ -4,10 +4,6 @@ source .github/travis/common.sh
 set -e
 
 $SPACER
-# Generate yosys binary for the branch quicklogic-rebased
-
-#setup install path
-INSTALL_DIR="$(pwd)/install"
 
 start_section "symbiflow.configure_cmake" "Configuring CMake (make env)"
 make env
@@ -15,7 +11,10 @@ cd build
 end_section "symbiflow.configure_cmake"
 
 $SPACER
+
 make_target all_conda "Setting up basic ${YELLOW}conda environment${NC}"
+
+$SPACER
 
 cp -r env/conda/share/yosys/* env/conda/share
 
@@ -32,6 +31,7 @@ end_section "info.conda.config"
 $SPACER
 
 echo "Running quicklogic testsuit"
-
 cd quicklogic/pp3/tests
-make_target all_quick_tests -j10
+make_target all_quick_tests "Building all quick targets"
+
+$SPACER
