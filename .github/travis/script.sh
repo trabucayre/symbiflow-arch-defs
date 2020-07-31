@@ -32,7 +32,7 @@ $SPACER
 
 echo "----------------------------------------"
 cd quicklogic/pp3/tests
-make_target all_quick_tests -j10 "Building all quick targets"
+make_target all_quick_tests -j1 "Building all quick targets"
 echo "----------------------------------------"
 
 $SPACER
