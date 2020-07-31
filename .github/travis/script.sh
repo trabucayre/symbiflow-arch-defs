@@ -30,8 +30,12 @@ end_section "info.conda.config"
 
 $SPACER
 
-echo "Running quicklogic testsuit"
-cd quicklogic/pp3/tests
-make_target all_quick_tests "Building all quick targets"
+echo "----------------------------------------"
+(
+	pushd quicklogic/pp3/tests
+  make_target all_quick_tests "Building all quick targets"
+	popd
+)
+echo "----------------------------------------"
 
 $SPACER
