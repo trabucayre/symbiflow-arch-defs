@@ -31,8 +31,18 @@ end_section "info.conda.config"
 $SPACER
 
 echo "----------------------------------------"
-cd quicklogic/pp3/tests
-make_target all_quick_tests "Building all quick targets"
+(
+    cd quicklogic/pp3/tests
+    make_target all_quick_tests "Building all quick targets"
+)
+echo "----------------------------------------"
+
+$SPACER
+
+echo "----------------------------------------"
+(
+    make_target all_ql_tests "Building all quick logic tests"
+)
 echo "----------------------------------------"
 
 $SPACER
