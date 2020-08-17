@@ -13,6 +13,9 @@ add_jlink_output(
   PARENT soc_clocks-ql-chandalar
 )
 
+add_dependencies(all_quick_tests soc_clocks-ql-chandalar_bit)
+add_dependencies(all_quick_tests soc_clocks-ql-chandalar_jlink)
+
 add_dependencies(all_ql_tests soc_clocks-ql-chandalar_bit)
 add_dependencies(all_ql_tests soc_clocks-ql-chandalar_jlink)
 #add_dependencies(all_quick_tests soc_clocks-ql-chandalar_analysis)

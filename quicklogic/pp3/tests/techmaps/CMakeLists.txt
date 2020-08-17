@@ -128,3 +128,4 @@ lut_techmap_test(3 50)
 lut_techmap_test(4 100)
 
 add_dependencies(all_ql_tests all_quicklogic_lut_techmap_tests)
+add_dependencies(all_quick_tests all_quicklogic_lut_techmap_tests)
