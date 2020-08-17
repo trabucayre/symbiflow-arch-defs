@@ -13,6 +13,9 @@ add_jlink_output(
   PARENT ext_counter-ql-chandalar
 )
 
+add_dependencies(all_quick_tests ext_counter-ql-chandalar_bit)
+add_dependencies(all_quick_tests ext_counter-ql-chandalar_jlink)
+
 add_dependencies(all_ql_tests ext_counter-ql-chandalar_bit)
 add_dependencies(all_ql_tests ext_counter-ql-chandalar_jlink)
 
