@@ -13,6 +13,12 @@ add_file_target(FILE init_1024x8.hex)
 add_file_target(FILE init_512x16.hex)
 add_file_target(FILE init_512x32.hex)
 
+add_custom_command(OUTPUT r512x32_512x32.v DEPENDS init_512x32.hex APPEND)
+add_custom_command(OUTPUT r1024x8_1024x8.v DEPENDS init_1024x8.hex APPEND)
+add_custom_command(OUTPUT r1024x16_1024x16.v DEPENDS init_1024x16.hex APPEND)
+add_custom_command(OUTPUT r512x16_512x16.v DEPENDS init_512x16.hex APPEND)
+
+
 
 add_fpga_target(
   NAME ram_test-ql-chandalar

@@ -9,7 +9,7 @@ input [7:0] WD;
 output [7:0] RD;
 
 parameter [8191:0] INIT = 8192'b0;
-parameter init_ram="init_1024x8.hex";	
+parameter INIT_FILE="init_1024x8.hex";	
 
 parameter addr_int = 10 ;
 parameter data_depth_int = 1024;
@@ -19,7 +19,7 @@ parameter reg_rd_int = 0;
 
 
 RAM_8K_BLK #( .addr_int(addr_int),.data_depth_int(data_depth_int),.data_width_int(data_width_int),.wr_enable_int(wr_enable_int),.reg_rd_int(reg_rd_int),
-              .INIT(INIT),.init_ram(init_ram)
+              .INIT(INIT),.INIT_FILE(INIT_FILE)
 			  )
 RAM_INST (	.WA(WA),
 			.RA(RA),
