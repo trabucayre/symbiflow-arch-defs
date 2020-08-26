@@ -11,16 +11,14 @@ output Almost_Full,Almost_Empty;
 
 parameter Concatenation_En = 1;
 
-parameter wr_depth_int0 = 512;
-parameter rd_depth_int0 = 512;
-parameter wr_width_int0 = 32;
-parameter rd_width_int0 = 32;
+parameter data_depth_int0 = 512;
+parameter data_width_int0 = 32;
 parameter reg_rd_int0 = 0;
 parameter sync_fifo_int0 = 0;
 
 
-FIFO_16K_BLK   #(Concatenation_En,
-				 wr_depth_int0,rd_depth_int0,wr_width_int0,rd_width_int0,reg_rd_int0,sync_fifo_int0
+FIFO_16K_BLK   #(.Concatenation_En(Concatenation_En),
+				 .data_depth_int0(data_depth_int0),.data_width_int0(data_width_int0),.reg_rd_int0(reg_rd_int0),.sync_fifo_int0(sync_fifo_int0)
 				 ) 
 FIFO_INST      (.DIN0(DIN),
 				.PUSH0(PUSH),
@@ -39,12 +37,6 @@ FIFO_INST      (.DIN0(DIN),
 				.Almost_Empty0(Almost_Empty),
 				.DOUT0(DOUT),
 		
-				.LS(1'b0),
-				.SD(1'b0),
-				.DS(1'b0),
-				.LS_RB1(1'b0),
-				.SD_RB1(1'b0),
-				.DS_RB1(1'b0)				
 				);
 
 endmodule

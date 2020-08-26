@@ -37,8 +37,8 @@ parameter reg_rd_int1 = 0;
 parameter sync_fifo_int1 = 1;
 
 FIFO_16K_BLK   #(Concatenation_En,
-				 wr_depth_int0,rd_depth_int0,wr_width_int0,rd_width_int0,reg_rd_int0,sync_fifo_int0,
-				 wr_depth_int1,rd_depth_int1,wr_width_int1,rd_width_int1,reg_rd_int1,sync_fifo_int1
+				 wr_depth_int0,wr_width_int0,reg_rd_int0,sync_fifo_int0,
+				 wr_depth_int1,wr_width_int1,reg_rd_int1,sync_fifo_int1
 				 ) 
 FIFO_INST      (.DIN0(DIN0),
 				.PUSH0(PUSH0),
@@ -74,12 +74,6 @@ FIFO_INST      (.DIN0(DIN0),
 				.Almost_Empty1(Almost_Empty1),
 				.DOUT1(DOUT1),
 				
-				.LS(1'b0),
-				.SD(1'b0),
-				.DS(1'b0),
-				.LS_RB1(1'b0),
-				.SD_RB1(1'b0),
-				.DS_RB1(1'b0)				
 				);
 				
 endmodule
