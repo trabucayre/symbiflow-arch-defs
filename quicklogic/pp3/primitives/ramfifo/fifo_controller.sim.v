@@ -3,33 +3,33 @@ module fifo_controller_model(
 	 Rst_n,
 	 Push_Clk,
 	 Pop_Clk,
-
+	
 	 Fifo_Push,
 	 Fifo_Push_Flush,
 	 Fifo_Full,
 	 Fifo_Full_Usr,
-
+	
 	 Fifo_Pop,
 	 Fifo_Pop_Flush,
 	 Fifo_Empty,
 	 Fifo_Empty_Usr,
-
+	
 	 Write_Addr,
-
+	
 	 Read_Addr,
-
+	 												 
 	 Fifo_Ram_Mode,
 	 Fifo_Sync_Mode,
 	 Fifo_Push_Width,
 	 Fifo_Pop_Width
 	  );
-
+	
     parameter MAX_PTR_WIDTH   = 12;
-
+  
     parameter DEPTH1 = (1<<(MAX_PTR_WIDTH-3));
     parameter DEPTH2 = (1<<(MAX_PTR_WIDTH-2));
     parameter DEPTH3 = (1<<(MAX_PTR_WIDTH-1));
-
+  
     parameter D1_QTR_A = MAX_PTR_WIDTH - 5;
     parameter D2_QTR_A = MAX_PTR_WIDTH - 4;
     parameter D3_QTR_A = MAX_PTR_WIDTH - 3;
@@ -37,26 +37,26 @@ module fifo_controller_model(
 	input	Rst_n;
 	input	Push_Clk;
 	input	Pop_Clk;
-
+	
 	input	Fifo_Push;
 	input	Fifo_Push_Flush;
 	output	Fifo_Full;
 	output	[3:0]  Fifo_Full_Usr;
-
+                            		
 	input	Fifo_Pop;
 	input	Fifo_Pop_Flush;
 	output	Fifo_Empty;
 	output	[3:0]  Fifo_Empty_Usr;
-
+	
 	output	[MAX_PTR_WIDTH-2:0]  Write_Addr;
-
+	
 	output	[MAX_PTR_WIDTH-2:0]  Read_Addr;
-
+		
 	input  Fifo_Ram_Mode;
 	input  Fifo_Sync_Mode;
 	input  [1:0] Fifo_Push_Width;
 	input  [1:0] Fifo_Pop_Width;
-
+	
 	reg    flush_pop_clk_tf;
 	reg    flush_pop2push_clk1;
 	reg    flush_push_clk_tf;
@@ -69,7 +69,7 @@ module fifo_controller_model(
 	reg    pop_flush_tf_push_clk;
 	reg    push2pop_ack1;
 	reg    push2pop_ack2;
-
+	
 	reg    fifo_full_flag_f;
 	reg    [3:0]  Fifo_Full_Usr;
 
@@ -78,7 +78,7 @@ module fifo_controller_model(
 
 	reg    [MAX_PTR_WIDTH-1:0]  push_ptr_push_clk;
 	reg    [MAX_PTR_WIDTH-1:0]  pop_ptr_push_clk;
-	reg    [MAX_PTR_WIDTH-1:0]  pop_ptr_async;
+	reg    [MAX_PTR_WIDTH-1:0]  pop_ptr_async;	    
 	reg    [MAX_PTR_WIDTH-1:0]  pop_ptr_pop_clk ;
 	reg    [MAX_PTR_WIDTH-1:0]  push_ptr_pop_clk;
 	reg    [MAX_PTR_WIDTH-1:0]  push_ptr_async;
@@ -89,9 +89,9 @@ module fifo_controller_model(
 	reg    [MAX_PTR_WIDTH-1:0]  pop_ptr_push_clk_mux;
 	reg    [MAX_PTR_WIDTH-1:0]  push_ptr_pop_clk_mux;
 
-	reg    match_room4none;
-	reg    match_room4one;
-	reg    match_room4half;
+	reg    match_room4none;		
+	reg    match_room4one;		
+	reg    match_room4half;  	      
 	reg    match_room4quart;
 
 	reg    match_all_left;
@@ -101,7 +101,7 @@ module fifo_controller_model(
  	reg   [MAX_PTR_WIDTH-1:0]   depth1_reg;
  	reg   [MAX_PTR_WIDTH-1:0]   depth2_reg;
  	reg   [MAX_PTR_WIDTH-1:0]   depth3_reg;
-
+  
 
 	wire	push_clk_rst;
 	wire	push_clk_rst_mux;
@@ -112,10 +112,10 @@ module fifo_controller_model(
 
 	wire	push_flush_gated;
 	wire	pop_flush_gated;
-
+	                          	
 	wire	[MAX_PTR_WIDTH-2:0] Write_Addr;
 	wire	[MAX_PTR_WIDTH-2:0] Read_Addr;
-
+	
 	wire	[MAX_PTR_WIDTH-1:0] push_ptr_push_clk_plus1;
 	wire	[MAX_PTR_WIDTH-1:0] next_push_ptr_push_clk;
 	wire	[MAX_PTR_WIDTH-1:0] pop_ptr_pop_clk_plus1;
@@ -136,13 +136,13 @@ module fifo_controller_model(
 	wire	[MAX_PTR_WIDTH-1:0] push_diff;
 	wire	[MAX_PTR_WIDTH-1:0] push_diff_plus_1;
 	wire	[MAX_PTR_WIDTH-1:0] pop_diff;
-
-	wire	match_room4all;
-	wire	match_room4eight;
-
-	wire	match_one_left;
+		
+	wire	match_room4all;		
+	wire	match_room4eight;	
+	
+	wire	match_one_left;			
 	wire	match_one2eight_left;
-
+	
 	integer	depth_sel_push;
 	integer depth_sel_pop;
 
@@ -152,7 +152,7 @@ module fifo_controller_model(
         depth2_reg = DEPTH2;
         depth3_reg = DEPTH3;
     end
-
+	
 	initial
 	begin
 		flush_pop_clk_tf		<= 1'b0;
@@ -187,7 +187,7 @@ module fifo_controller_model(
 
 	assign	push_ptr_push_clk_plus1			= push_ptr_push_clk + 1;
 	assign	next_push_ptr_push_clk			= ( Fifo_Push ) ? push_ptr_push_clk_plus1 : push_ptr_push_clk;
-	assign	next_push_ptr_push_clk_mask	= { ( push_ptr_push_clk_mask & next_push_ptr_push_clk[MAX_PTR_WIDTH-1:MAX_PTR_WIDTH-2] ), next_push_ptr_push_clk[MAX_PTR_WIDTH-3:0] };
+	assign	next_push_ptr_push_clk_mask	= { ( push_ptr_push_clk_mask & next_push_ptr_push_clk[MAX_PTR_WIDTH-1:MAX_PTR_WIDTH-2] ), next_push_ptr_push_clk[MAX_PTR_WIDTH-3:0] };	
 
 	assign	pop_ptr_pop_clk_plus1				= pop_ptr_pop_clk + 1;
 	assign	next_pop_ptr_pop_clk				= ( Fifo_Pop ) ? pop_ptr_pop_clk_plus1 : pop_ptr_pop_clk;
@@ -209,27 +209,27 @@ module fifo_controller_model(
 
 	assign	match_room4all		= ~|push_diff;
 	assign	match_room4eight	= ( depth_sel_push == 3 ) ? ( push_diff >= DEPTH3-8 ) : ( depth_sel_push == 2 ) ? ( push_diff >= DEPTH2-8 ) : ( push_diff >= DEPTH1-8 );
-
+	
 	assign	match_one_left				= ( pop_diff == 1 );
 	assign	match_one2eight_left	= ( pop_diff < 8 );
 
 	assign	push_flush_gated	= Fifo_Push_Flush & ~push_local_flush_mask;
 	assign	pop_flush_gated		= Fifo_Pop_Flush & ~pop_local_flush_mask;
-
+	
 	assign	push_clk_rst	= flush_pop2push_clk1 ^ pop_flush_tf_push_clk;
 	assign	pop_clk_rst		= flush_push2pop_clk1 ^ push_flush_tf_pop_clk;
-
+	
 	assign	pop_flush_done	= push2pop_ack1 ^ push2pop_ack2;
 	assign	push_flush_done	= pop2push_ack1 ^ pop2push_ack2;
-
+	
 	assign	push_clk_rst_mux	= ( Fifo_Sync_Mode ) ? ( Fifo_Push_Flush | Fifo_Pop_Flush ) : ( push_flush_gated | push_clk_rst );
 	assign	pop_clk_rst_mux		= ( Fifo_Sync_Mode ) ? ( Fifo_Push_Flush | Fifo_Pop_Flush ) : ( pop_flush_gated | ( pop_local_flush_mask & ~pop_flush_done ) | pop_clk_rst );
-
+	
 	reg match_room_at_most63, match_at_most63_left;
-
+	
 	always@( push_diff or push_diff_plus_1 or depth_sel_push or match_room4none or match_room4one )
 	begin
-		if( depth_sel_push == 1 )
+		if( depth_sel_push == 1 ) 
 		begin
 			match_room4none		<= ( push_diff[D1_QTR_A+2:0] == depth1_reg[D1_QTR_A+2:0] );
 
@@ -237,10 +237,10 @@ module fifo_controller_model(
 
 			match_room4half		<= ( push_diff[D1_QTR_A+1] == 1'b1 );
 			match_room4quart	<= ( push_diff[D1_QTR_A] == 1'b1 );
-
+			
 			match_room_at_most63    <=  push_diff[6];
 		end
-		else if( depth_sel_push == 2 )
+		else if( depth_sel_push == 2 ) 
 		begin
 			match_room4none		<= ( push_diff[D2_QTR_A+2:0] == depth2_reg[D2_QTR_A+2:0] );
 
@@ -248,56 +248,56 @@ module fifo_controller_model(
 
 			match_room4half		<= ( push_diff[D2_QTR_A+1] == 1'b1 );
 			match_room4quart	<= ( push_diff[D2_QTR_A] == 1'b1 );
-
+			
 			match_room_at_most63    <=  &push_diff[7:6];
 		end
-		else
+		else  
 		begin
 			match_room4none		<= ( push_diff == depth3_reg );
 			match_room4one		<= ( push_diff_plus_1 == depth3_reg ) | match_room4none;
 
 			match_room4half		<= ( push_diff[D3_QTR_A+1] == 1'b1 );
 			match_room4quart	<= ( push_diff[D3_QTR_A] == 1'b1 );
-
+			
 			match_room_at_most63	<= &push_diff[8:6];
 		end
 	end
-
+	
 	assign room4_32s = ~push_diff[5];
 	assign room4_16s = ~push_diff[4];
 	assign room4_8s  = ~push_diff[3];
 	assign room4_4s  = ~push_diff[2];
 	assign room4_2s  = ~push_diff[1];
-	assign room4_1s  = &push_diff[1:0];
-
+	assign room4_1s  = &push_diff[1:0];				
+	
 	always@( depth_sel_pop or pop_diff )
 	begin
-		if( depth_sel_pop == 1 )
+		if( depth_sel_pop == 1 ) 
 		begin
 			match_all_left		<= ( pop_diff[D1_QTR_A+2:0] == depth1_reg[D1_QTR_A+2:0] );
 
 			match_half_left		<= ( pop_diff[D1_QTR_A+1] == 1'b1 );
 			match_quart_left	<= ( pop_diff[D1_QTR_A] == 1'b1 );
-
+			
 			match_at_most63_left	<= ~pop_diff[6];
 		end
-		else if( depth_sel_pop == 2 )
+		else if( depth_sel_pop == 2 ) 
 		begin
 			match_all_left		<= ( pop_diff[D2_QTR_A+2:0] == depth2_reg[D2_QTR_A+2:0] );
 
 			match_half_left		<= ( pop_diff[D2_QTR_A+1] == 1'b1 );
 			match_quart_left	<= ( pop_diff[D2_QTR_A] == 1'b1 );
-
-			match_at_most63_left	<= ~|pop_diff[7:6];
+			
+			match_at_most63_left	<= ~|pop_diff[7:6];			
 		end
-		else
+		else  
 		begin
 			match_all_left		<= ( pop_diff == depth3_reg );
 
 			match_half_left		<= ( pop_diff[D3_QTR_A+1] == 1'b1 );
 			match_quart_left	<= ( pop_diff[D3_QTR_A] == 1'b1 );
-
-			match_at_most63_left	<= ~|pop_diff[8:6];
+			
+			match_at_most63_left	<= ~|pop_diff[8:6];			
 		end
 	end
 
@@ -307,7 +307,7 @@ module fifo_controller_model(
 	assign at_least_4 = pop_diff[2];
 	assign at_least_2 = pop_diff[1];
 	assign one_left = pop_diff[0];
-
+	
 	always@( posedge Pop_Clk or negedge Rst_n )
 	begin
 		if( ~Rst_n )
@@ -328,7 +328,7 @@ module fifo_controller_model(
 			begin
 				flush_pop_clk_tf	<= ~flush_pop_clk_tf;
 			end
-
+	
 			if( pop_flush_gated & ~Fifo_Sync_Mode )
 			begin
 				pop_local_flush_mask	<= 1'b1;
@@ -337,7 +337,7 @@ module fifo_controller_model(
 			begin
 				pop_local_flush_mask	<= 1'b0;
 			end
-
+	
 			if( pop_clk_rst )
 			begin
 				push_flush_tf_pop_clk	<= ~push_flush_tf_pop_clk;
@@ -365,7 +365,7 @@ module fifo_controller_model(
 			begin
 				flush_push_clk_tf	<= ~flush_push_clk_tf;
 			end
-
+	
 			if( push_flush_gated & ~Fifo_Sync_Mode )
 			begin
 				push_local_flush_mask	<= 1'b1;
@@ -374,7 +374,7 @@ module fifo_controller_model(
 			begin
 				push_local_flush_mask	<= 1'b0;
 			end
-
+			
 			if( push_clk_rst )
 			begin
 				pop_flush_tf_push_clk	<= ~pop_flush_tf_push_clk;
@@ -387,49 +387,49 @@ module fifo_controller_model(
 						pop_ptr_push_clk or push_ptr_pop_clk )
 	begin
 		case( { Fifo_Push_Width, Fifo_Pop_Width } )
-			4'b0001:
+			4'b0001:	
       begin
       	push_ptr_push_clk_mask	<= 2'b11;
 				pop_ptr_pop_clk_mask		<= 2'b01;
 				pop_ptr_push_clk_mux		<= pop_ptr_push_clk_l_shift1;
 				push_ptr_pop_clk_mux		<= push_ptr_pop_clk_r_shift1;
 			end
-			4'b0010:
+			4'b0010:	
       begin
       	push_ptr_push_clk_mask	<= 2'b11;
 				pop_ptr_pop_clk_mask		<= 2'b00;
 				pop_ptr_push_clk_mux		<= pop_ptr_push_clk_l_shift2;
 				push_ptr_pop_clk_mux		<= push_ptr_pop_clk_r_shift2;
 			end
-			4'b0100:
+			4'b0100:	
       begin
       	push_ptr_push_clk_mask	<= 2'b01;
 				pop_ptr_pop_clk_mask		<= 2'b11;
 				pop_ptr_push_clk_mux		<= pop_ptr_push_clk_r_shift1;
 				push_ptr_pop_clk_mux		<= push_ptr_pop_clk_l_shift1;
 			end
-      4'b0110:
+      4'b0110:	
       begin
       	push_ptr_push_clk_mask	<= 2'b11;
 				pop_ptr_pop_clk_mask		<= 2'b01;
 				pop_ptr_push_clk_mux		<= pop_ptr_push_clk_l_shift1;
 				push_ptr_pop_clk_mux		<= push_ptr_pop_clk_r_shift1;
 			end
-			4'b1000:
+			4'b1000:	
       begin
       	push_ptr_push_clk_mask	<= 2'b00;
 				pop_ptr_pop_clk_mask		<= 2'b11;
 				pop_ptr_push_clk_mux		<= pop_ptr_push_clk_r_shift2;
 				push_ptr_pop_clk_mux		<= push_ptr_pop_clk_l_shift2;
 			end
-			4'b1001:
+			4'b1001:	
       begin
       	push_ptr_push_clk_mask	<= 2'b01;
 				pop_ptr_pop_clk_mask		<= 2'b11;
 				pop_ptr_push_clk_mux		<= pop_ptr_push_clk_r_shift1;
 				push_ptr_pop_clk_mux		<= push_ptr_pop_clk_l_shift1;
 			end
-      default:
+      default:	
       begin
       	push_ptr_push_clk_mask	<= 2'b11;
 				pop_ptr_pop_clk_mask		<= 2'b11;
@@ -438,20 +438,20 @@ module fifo_controller_model(
 			end
   	endcase
 	end
-
+	
 	always@( Fifo_Ram_Mode or Fifo_Push_Width )
 	begin
 		if( Fifo_Ram_Mode == Fifo_Push_Width[0] )
 		begin
-			depth_sel_push	<= 2;
+			depth_sel_push	<= 2;	
 		end
 		else if( Fifo_Ram_Mode == Fifo_Push_Width[1] )
 		begin
-			depth_sel_push	<= 1;
+			depth_sel_push	<= 1;	
 		end
 		else
 		begin
-			depth_sel_push	<= 3;
+			depth_sel_push	<= 3;	
 		end
 	end
 
@@ -459,15 +459,15 @@ module fifo_controller_model(
 	begin
 		if( Fifo_Ram_Mode == Fifo_Pop_Width[0] )
 		begin
-			depth_sel_pop	<= 2;
+			depth_sel_pop	<= 2;	
 		end
 		else if( Fifo_Ram_Mode == Fifo_Pop_Width[1] )
 		begin
-			depth_sel_pop	<= 1;
+			depth_sel_pop	<= 1;	
 		end
 		else
 		begin
-			depth_sel_pop	<= 3;
+			depth_sel_pop	<= 3;	
 		end
 	end
 
@@ -491,7 +491,7 @@ module fifo_controller_model(
 			end
 			else
 			begin
-				push_ptr_push_clk	<= next_push_ptr_push_clk;
+				push_ptr_push_clk	<= next_push_ptr_push_clk; 
 				pop_ptr_push_clk	<= ( Fifo_Sync_Mode ) ? next_pop_ptr_pop_clk : pop_ptr_async;
 				pop_ptr_async			<= pop_ptr_pop_clk;
 				fifo_full_flag_f	<= match_room4one | match_room4none;
@@ -525,7 +525,7 @@ module fifo_controller_model(
 				fifo_empty_flag_f	<= ( pop_diff == 1 ) | ( pop_diff == 0 );
 			end
 		end
-	end
+	end	
 
 	always@( posedge Push_Clk or negedge Rst_n )
 	begin
@@ -551,7 +551,7 @@ module fifo_controller_model(
 			begin
 				Fifo_Full_Usr	<= 4'b0011;
 			end
-			else
+			else 
 				begin
 				if (match_room_at_most63)
 					begin
@@ -588,7 +588,7 @@ module fifo_controller_model(
 			begin
 				Fifo_Empty_Usr	<= 4'b0000;
 			end
-			else
+			else 
 			if( match_all_left )
 			begin
 				Fifo_Empty_Usr	<= 4'b1111;
@@ -601,20 +601,20 @@ module fifo_controller_model(
 			begin
 				Fifo_Empty_Usr	<= 4'b1101;
 			end
-			else
+			else 
 				begin
 				if (match_at_most63_left)
 					begin
 					if (at_least_32)
 						Fifo_Empty_Usr	<= 4'b0110;
 					else if	(at_least_16)
-						Fifo_Empty_Usr	<= 4'b0101;
+						Fifo_Empty_Usr	<= 4'b0101;					
 					else if	(at_least_8)
-						Fifo_Empty_Usr	<= 4'b0100;
+						Fifo_Empty_Usr	<= 4'b0100;					
 					else if	(at_least_4)
-						Fifo_Empty_Usr	<= 4'b0011;
+						Fifo_Empty_Usr	<= 4'b0011;					
 					else if	(at_least_2)
-						Fifo_Empty_Usr	<= 4'b0010;
+						Fifo_Empty_Usr	<= 4'b0010;					
 					else if	(one_left)
 						Fifo_Empty_Usr	<= 4'b0001;
 					else Fifo_Empty_Usr	<= 4'b0000;
