@@ -35,8 +35,10 @@ setup_env(
 add_conda_package(
   NAME yosys
   PROVIDES yosys
-  PACKAGE_SPEC "yosys 0.6.0_0016_g4045d48 None"
+  PACKAGE_SPEC "yosys 0.8.0_0002_gc3b38fdc 20200901_073908"
   )
+
+
 add_conda_package(
   NAME openocd
   PROVIDES openocd
@@ -45,7 +47,7 @@ add_conda_package(
 add_conda_package(
   NAME vtr
   PROVIDES vpr genfasm
-  PACKAGE_SPEC "vtr v8.0.0_rc2_4007_g7cafb85 None"
+  PACKAGE_SPEC "vtr v8.0.0_rc2_5082_gf1a3bcc2a 20201001_121833"
   )
 add_conda_package(
   NAME libxslt
@@ -79,7 +81,7 @@ add_conda_package(
   )
 add_conda_package(
   NAME yosys-plugins
-  PACKAGE_SPEC "yosys-plugins 1.2.0_0007_gda80b28 None"
+  PACKAGE_SPEC "yosys-plugins 1.2.0_0009_g9ab211c 20201001_121833"
   NO_EXE
   )
 # For python-symbiflow-v2x
