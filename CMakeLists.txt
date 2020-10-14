@@ -47,7 +47,7 @@ add_conda_package(
 add_conda_package(
   NAME vtr
   PROVIDES vpr genfasm
-  PACKAGE_SPEC "vtr v8.0.0_rc2_2883_g9098cd14a 20201008_120307"
+  PACKAGE_SPEC "vtr v8.0.0_rc2_2894_gdadca7ecf 20201008_140004"
   )
 add_conda_package(
   NAME libxslt
