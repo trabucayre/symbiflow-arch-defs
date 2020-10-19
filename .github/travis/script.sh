@@ -6,7 +6,7 @@ set -e
 $SPACER
 
 start_section "symbiflow.configure_cmake" "Configuring CMake (make env)"
-make env CMAKE_FLAGS="-GNinja"
+make env
 cd build
 end_section "symbiflow.configure_cmake"
 
