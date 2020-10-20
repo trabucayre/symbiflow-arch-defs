@@ -1,7 +1,7 @@
 function(QUICKLOGIC_DEFINE_DEVICE_TYPE)
   # ~~~
   # QUICKLOGIC_DEFINE_DEVICE_TYPE(
-  #   FAMILY <family>  
+  #   FAMILY <family>
   #   ARCH <arch>
   #   DEVICE <device>
   #   PACKAGES <package> <package> ...
@@ -68,7 +68,7 @@ function(QUICKLOGIC_DEFINE_DEVICE_TYPE)
 
   get_target_property_required(QUICKLOGIC_TIMINGS_IMPORTER env QUICKLOGIC_TIMINGS_IMPORTER)
   get_target_property_required(QUICKLOGIC_TIMINGS_IMPORTER_TARGET env QUICKLOGIC_TIMINGS_IMPORTER_TARGET)
-  
+
   # TODO: How to handle different timing cases that depend on a cell config?
   # For example BIDIR cells have different timings for different voltages.
   #
@@ -116,6 +116,7 @@ function(QUICKLOGIC_DEFINE_DEVICE_TYPE)
 
   # Process the database, create the VPR database
   set(PREPARE_VPR_DATABASE ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils/prepare_vpr_database.py)
+  get_file_target(PHY_DB_TARGET ${PHY_DB_FILE})
 
   if(NOT "${GRID_LIMIT}" STREQUAL "")
     separate_arguments(GRID_LIMIT_ARGS UNIX_COMMAND "--grid-limit ${GRID_LIMIT}")
@@ -128,9 +129,9 @@ function(QUICKLOGIC_DEFINE_DEVICE_TYPE)
     COMMAND ${PYTHON3} ${PREPARE_VPR_DATABASE}
       --phy-db ${PHY_DB_FILE}
       --vpr-db ${VPR_DB_FILE}
-      --sdf-dir ${SDF_TIMING_DIR} 
+      --sdf-dir ${SDF_TIMING_DIR}
       ${GRID_LIMIT_ARGS}
-    DEPENDS ${PHY_DB_FILE} sdf_timing ${SDF_FILE_TARGETS} ${PREPARE_VPR_DATABASE} ${PYTHON3_TARGET}
+    DEPENDS ${PHY_DB_TARGET} sdf_timing ${SDF_FILE_TARGETS} ${PREPARE_VPR_DATABASE} ${PYTHON3_TARGET}
   )
   add_file_target(FILE ${VPR_DB_FILE} GENERATED)
 
