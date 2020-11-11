@@ -28,4 +28,66 @@ jobs:
           unzip .tmp/ninja-linux.zip -d .tmp
           export PATH=$PATH:$PWD/.tmp
           stdbuf -i0 -o0 -e0 ./.github/travis/script.sh
+  install:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Architectures definitions installation
+        run: |
+          sudo apt update
+          sudo apt install -y g++-8 gcc-8 colordiff coreutils graphviz inkscape make git unzip cmake
+          source ./.github/travis/common.sh
+          stdbuf -i0 -o0 -e0 ./.github/travis/install.sh
+          mkdir .tmp
+          curl -L https://github.com/ninja-build/ninja/releases/download/v1.10.0/ninja-linux.zip -o .tmp/ninja-linux.zip
+          unzip .tmp/ninja-linux.zip -d .tmp
+          export PATH=$PATH:$PWD/.tmp
+          stdbuf -i0 -o0 -e0 ./.github/travis/architectures_install.sh
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ql-arch-definitions
+          path: |
+              quicklogic-arch-defs-*.tar.gz
+
+  upload-architectures:
+    runs-on: ubuntu-18.04
+    needs: install
+    steps:
+
+      - uses: actions/download-artifact@v2
+      - name: Upload achitectures to bucket
+        if: github.event_name == 'push'
+
+        uses: weslenng/gcp-storage-sync@master
+        env:
+          GCP_SERVICE_ACCOUNT_KEY_FILE: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY_FILE }}
+          GCP_STORAGE_BUCKET: ${{ secrets.GCP_STORAGE_BUCKET }}
+          SOURCE_DIR: "ql-arch-definitions"
+
+      - name: Generate latest file
+        run: |
+          export FILE=$(ls ql-arch-definitions)
+          echo "https://storage.googleapis.com/symbiflow-arch-defs-install/${FILE}" > latest
+      - uses: actions/upload-artifact@v2
+        with:
+          name: latest-package
+          path: |
+            latest
+
+  upload-latest:
+    runs-on: ubuntu-18.04
+    needs: [build, upload-architectures]
+    steps:
+
+      - uses: actions/download-artifact@v2
+      - name: Upload latest file to bucket
+        if: github.event_name == 'push'
+
+        uses: weslenng/gcp-storage-sync@master
+        env:
+          GCP_SERVICE_ACCOUNT_KEY_FILE: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY_FILE }}
+          GCP_STORAGE_BUCKET: ${{ secrets.GCP_STORAGE_BUCKET }}
+          SOURCE_DIR: "latest-package"
 
