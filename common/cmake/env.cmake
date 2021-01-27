@@ -86,7 +86,7 @@ function(SETUP_ENV)
       COMMAND ${CONDA_BIN} config --system --set always_yes yes
       COMMAND ${CONDA_BIN} config --system --add envs_dirs ${CONDA_DIR}/envs
       COMMAND ${CONDA_BIN} config --system --add pkgs_dirs ${CONDA_DIR}/pkgs
-      # Make sure symbiflow is highest priority channel
+      COMMAND ${CONDA_BIN} config --add channels conda-forge
       COMMAND ${CONDA_BIN} config --add channels litex-hub
       COMMAND ${CONDA_BIN} install lxml
       COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${CONDA_BIN}
