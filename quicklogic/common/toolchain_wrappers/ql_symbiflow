@@ -17,7 +17,7 @@ elif [[ $1 == "-synth" || $1 == "-compile" ]]; then
 echo -e "----------------- \n" 
 elif [[ $1 == "-h"  ||  $1 == "--help" ]];then
 echo -e "\nBelow are the supported commands: \n\
- To synthesize and dump a eblif file:\n\
+ To synthesize and dump a eblif file: \n\
 \t>ql_symbiflow -synth -src <source_dir path> -d <device> -P <package> -t <top> -v <verilog file/files> -p <pcf file>  \n\
  To run synthesis, pack, place and route, generate bitstream:\n\
 \t>ql_symbiflow -compile -src <source_dir path> -d <device> -P <package> -t <top> -v <verilog file/files> -p <pcf file>  \n\

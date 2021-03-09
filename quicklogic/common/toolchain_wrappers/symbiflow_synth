@@ -5,7 +5,7 @@ MYPATH=`realpath $0`
 MYPATH=`dirname ${MYPATH}`
 
 export TECHMAP_PATH=`realpath ${MYPATH}/../share/techmaps/quicklogic/pp3/techmap`
-
+#Set the tcl paths
 SYNTH_TCL_PATH=`realpath ${MYPATH}/../share/quicklogic/synth.tcl`
 CONV_TCL_PATH=`realpath ${MYPATH}/../share/quicklogic/conv.tcl`
 SPLIT_INOUTS=`realpath ${MYPATH}/python/split_inouts.py`
