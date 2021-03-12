@@ -35,7 +35,7 @@ setup_env(
 add_conda_package(
   NAME yosys
   PROVIDES yosys
-  PACKAGE_SPEC "quicklogic-yosys v0.8.0_75_g3609a7d9 20210127_093658"
+  PACKAGE_SPEC "quicklogic-yosys 0.8.0_103_ga920ab6b 20210310_194315"
   )
 
 add_conda_package(
