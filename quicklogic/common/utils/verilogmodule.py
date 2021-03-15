@@ -190,10 +190,15 @@ class VModule(object):
 
         assign = ""
         direction = self.get_io_config(parameters)
+
+        print(direction, bloc, ioname, parameters)
+
         if direction == 'input':
             assign = "    assign {} = {};".format(parameters["IZ"], ioname)
         elif direction == 'output':
             assign = "    assign {} = {};".format(ioname, parameters["OQI"])
+        elif direction is None:
+            pass
         else:
             assert False, "Unknown IO configuration"
 
@@ -218,8 +223,12 @@ class VModule(object):
         str: Verilog entry
         '''
         if typ == 'BIDIR':
+
             # We do not emit the BIDIR cell for non inout IOs
-            if self.get_io_config(parameters) != 'inout':
+            direction = self.get_io_config(parameters)
+            if direction is None:
+                return ""
+            elif direction != 'inout':
                 return self.form_simple_assign(loc, parameters)
 
         params = []
@@ -556,7 +565,8 @@ class VModule(object):
                     elif wire[1].startswith("CAND"):
                         dst = (currloc, inputname)
                         dst = self.org_loc_map.get(dst, dst)
-                        inputs[inputname] = self.cand_map[dst[0]][wire[1]]
+                        if dst[0] in self.cand_map:
+                            inputs[inputname] = self.cand_map[dst[0]][wire[1]]
                         continue
                     srctype = self.vpr_tile_grid[wire[0]].type
                     srctype_cells = self.vpr_tile_types[srctype].cells
@@ -579,6 +589,41 @@ class VModule(object):
                 else:
                     # else update IOs
                     self.elements[currloc][currtype].ios.update(inputs)
+
+        # Prune BELs that do not drive anythin (have all outputs disconnected)
+        for loc, elements in list(self.elements.items()):
+            for type, element in list(elements.items()):
+
+                # Handle IO cells
+                if element.type in ['CLOCK', 'BIDIR', 'SDIOMUX']:
+
+                    if element.type == "CLOCK":
+                        direction = "input"
+                    else:
+                        direction = self.get_io_config(element.ios)
+
+                    # Remove the cell if none is connected
+                    if direction is None:
+                        del elements[type]
+
+                # Handle non-io cells
+                else:
+
+                    # Get connected pin names and output pin names
+                    connected_pins = set(element.ios.keys())
+                    output_pins = set([
+                        pin.name.split('[')[0]
+                        for pin in self.cells_library[element.type].pins
+                        if pin.direction == PinDirection.OUTPUT
+                    ])
+
+                    # Remove the cell if none is connected
+                    if not len(connected_pins & output_pins):
+                        del elements[type]
+
+            # Prune the whole location
+            if not len(elements):
+                del self.elements[loc]
 
     def get_io_name(self, loc):
 
@@ -617,7 +662,12 @@ class VModule(object):
         elif output_en:
             direction = 'output'
         else:
-            assert False, "Unknown IO configuration"
+            direction = None
+
+        # Output unrouted. Discard
+        if direction == 'input':
+            if 'IZ' not in ios:
+                return None
 
         return direction
 
@@ -637,10 +687,12 @@ class VModule(object):
                     else:
                         direction = self.get_io_config(element.ios)
 
-                    name = self.get_io_name(eloc)
-                    self.ios[eloc] = VerilogIO(
-                        name=name, direction=direction, ioloc=eloc
-                    )
+                    # Add the input if used
+                    if direction is not None:
+                        name = self.get_io_name(eloc)
+                        self.ios[eloc] = VerilogIO(
+                            name=name, direction=direction, ioloc=eloc
+                        )
 
                     # keep the original wire name for generating the wireid
                     #wireid = Wire(name, "inout_pin", False)
