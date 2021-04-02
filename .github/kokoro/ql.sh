@@ -22,7 +22,7 @@ set +e
 	pushd build
 	export VPR_NUM_WORKERS=${CORES}
 	set +e
-	ninja -j${MAX_CORES} all_quicklogic_tests
+	ninja -j${MAX_CORES} all_qlf_k4n8_tests_adder
 	BUILD_RESULT=$?
 	# FIXME: Not sure if the below will work for QuickLogic now.
 	#ninja print_qor > ql_openfpga_qor.csv
