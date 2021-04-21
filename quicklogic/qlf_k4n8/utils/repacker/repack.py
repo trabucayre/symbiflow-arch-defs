@@ -16,6 +16,7 @@ import logging
 import argparse
 import sys
 import os
+import shlex
 import hashlib
 import time
 from collections import namedtuple
@@ -36,7 +37,7 @@ from pb_rr_graph_router import Router
 from pb_rr_graph_netlist import load_clb_nets_into_pb_graph
 from pb_rr_graph_netlist import build_packed_netlist_from_pb_graph
 
-from pb_type import PbType, Model
+from pb_type import PbType, Model, PortType
 
 # =============================================================================
 
@@ -78,7 +79,7 @@ class RepackingConstraint:
 # =============================================================================
 
 
-def fixup_route_throu_luts(clb_block):
+def fixup_route_throu_luts(clb_block, new_net_ids):
     """
     This function identifies route-throu LUTs in the packed netlist and
     replaces them with explicit LUT-1 blocks.
@@ -111,7 +112,6 @@ def fixup_route_throu_luts(clb_block):
         return []
 
     # Process blocks
-    new_net_ids = {}
     net_pairs = []
 
     for block in blocks:
@@ -245,6 +245,7 @@ def insert_buffers(nets, eblif, clb_block):
         cell.ports["lut_in[0]"] = net_inp
         cell.ports["lut_out"] = net_out
         cell.init = [0, 1]
+        assert cell.name not in eblif.cells, cell
         eblif.cells[cell.name] = cell
 
         # Collects blocks driven by the output net
@@ -502,6 +503,9 @@ def annotate_net_endpoints(
                 constrained_nets[constraint.block_type] = set()
             constrained_nets[constraint.block_type].add(constraint.net)
 
+        # Get nets relevant to this block
+        all_nets = block.get_nets()
+
     # Get block path
     if block_path is None:
         block_path = block.get_path()
@@ -538,17 +542,20 @@ def annotate_net_endpoints(
             if key in constraints:
                 constraint = constraints[key]
 
-                # Check if the block type matches
-                if block_type == constraint.block_type:
-                    logging.debug(
-                        "    Constraining net '{}' to port '{}'".format(
-                            constraint.net, port
-                        )
-                    )
+                # The net must be present in the block
+                if constraint.net in all_nets:
 
-                    # Assign the net
-                    node.net = constraint.net
-                    continue
+                    # Check if the block type matches
+                    if block_type == constraint.block_type:
+                        logging.debug(
+                            "    Constraining net '{}' to port '{}'".format(
+                                constraint.net, port
+                            )
+                        )
+
+                        # Assign the net
+                        node.net = constraint.net
+                        continue
 
         # Optionally remap the port
         if port_map is not None:
@@ -701,6 +708,23 @@ def repack_netlist_cell(
         pad_len = (1 << lut_width) - len(init)
         init = "0" * pad_len + init
 
+        repacked_cell.parameters["LUT"] = init
+
+    # If the cell is a LUT-based const generator append the LUT parameter as
+    # well.
+    if cell.type == "$const":
+
+        assert lut_width == 0, (cell, lut_width)
+
+        # Assume that the model is a LUT. Take its widest input port and use
+        # its width as LUT size.
+        max_width = -1
+        for port in model.ports.values():
+            if port.type == PortType.INPUT:
+                if port.width > max_width:
+                    max_width = port.width
+
+        init = str(cell.init) * (1 << max_width)
         repacked_cell.parameters["LUT"] = init
 
     # If the rule contains mode bits then append the MODE parameter to the cell
@@ -993,6 +1017,10 @@ def main():
     if args.log is not None:
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
+    # Re-assemble and log the commandline
+    cmdline = " ".join([shlex.quote(a) for a in sys.argv])
+    logging.debug("command line: {}".format(cmdline))
+
     # Load the VPR architecture
     logging.info("Loading VPR architecture file...")
     xml_tree = ET.parse(args.vpr_arch, ET.XMLParser(remove_blank_text=True))
@@ -1068,6 +1096,12 @@ def main():
     net_xml = ET.parse(args.net_in, ET.XMLParser(remove_blank_text=True))
     packed_netlist = PackedNetlist.from_etree(net_xml.getroot())
 
+    # Count blocks
+    total_blocks = 0
+    for clb_block in packed_netlist.blocks.values():
+        total_blocks += clb_block.count_leafs()
+    logging.debug(" {} leaf blocks".format(total_blocks))
+
     init_time = time.perf_counter() - init_time
     repack_time = time.perf_counter()
 
@@ -1076,6 +1110,8 @@ def main():
 
     removed_ios = set()
     leaf_block_names = {}
+
+    route_through_net_ids = {}
 
     repacked_clb_count = 0
     repacked_block_count = 0
@@ -1098,7 +1134,7 @@ def main():
 
         # Identify and fixup route-throu LUTs
         logging.debug("  Identifying route-throu LUTs...")
-        net_pairs = fixup_route_throu_luts(clb_block)
+        net_pairs = fixup_route_throu_luts(clb_block, route_through_net_ids)
         insert_buffers(net_pairs, eblif, clb_block)
 
         # Identify blocks to repack. Continue to next CLB if there are none
@@ -1387,6 +1423,12 @@ def main():
         with open(fname, "w") as fp:
             fp.writelines(placement)
 
+    # Count blocks
+    total_blocks = 0
+    for clb_block in packed_netlist.blocks.values():
+        total_blocks += clb_block.count_leafs()
+
+    # Print statistics
     logging.info("Finished.")
 
     logging.info("")
@@ -1395,6 +1437,7 @@ def main():
     logging.info("Finishing time     : {:.2f}s".format(writeout_time))
     logging.info("Repacked CLBs      : {}".format(repacked_clb_count))
     logging.info("Repacked blocks    : {}".format(repacked_block_count))
+    logging.info("Total blocks       : {}".format(total_blocks))
 
 
 # =============================================================================
