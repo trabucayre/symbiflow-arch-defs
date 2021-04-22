@@ -9,7 +9,7 @@
 module top (clk, reset, enable, count);
 input clk, reset, enable;
 output [15:0] count;
-reg [15:0] count;                                   
+reg [15:0] count;
 
 always @ (posedge clk)
 if (reset == 1'b1) begin
@@ -18,4 +18,4 @@ end else if ( enable == 1'b1) begin
   count <= count + 1;
 end
 
-endmodule  
+endmodule
