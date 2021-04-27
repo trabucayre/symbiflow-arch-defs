@@ -42,3 +42,6 @@ make_target all_xml_lint "Complete all xmllint"
 
 echo "Suppressing some demo bitstreams, as the 8k parts cannot be built on GH actions."
 make_target all "Building all demo bitstreams"
+
+echo "Run Quicklogic specific testcases"
+make_target all_quicklogic_tests
