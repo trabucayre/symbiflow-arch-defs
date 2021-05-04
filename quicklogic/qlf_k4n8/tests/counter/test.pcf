@@ -1,2 +1,0 @@
-set_io led[0] user_OUT_B[0]
-set_io led[1] user_OUT_T[11]
