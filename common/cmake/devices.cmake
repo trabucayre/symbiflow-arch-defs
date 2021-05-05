@@ -1356,6 +1356,7 @@ function(ADD_FPGA_TARGET)
   #   [ASSERT_USAGE <usage_spec>]
   #   [DEFINES <definitions>]
   #   [BIT_TO_V_EXTRA_ARGS]
+  #   [NET_PATCH_EXTRA_ARGS]
   #   [INSTALL_CIRCUIT]
   #   )
   # ~~~
@@ -1382,6 +1383,9 @@ function(ADD_FPGA_TARGET)
   #
   # DEFINES is a list of environment variables to be defined during Yosys
   # invocation.
+  #
+  # NET_PATCH_EXTRA_ARGS allows to specify extra design-specific arguments to
+  # the packed netlist patching utility (if any).
   #
   # INSTALL_CIRCUIT is an option that enables installing the generated eblif circuit
   # file in the install destination directory. Also the generates/user-provided SDC
@@ -1411,7 +1415,7 @@ function(ADD_FPGA_TARGET)
   #
   set(options EXPLICIT_ADD_FILE_TARGET EMIT_CHECK_TESTS NO_SYNTHESIS ROUTE_ONLY INSTALL_CIRCUIT)
   set(oneValueArgs NAME TOP BOARD INPUT_IO_FILE EQUIV_CHECK_SCRIPT AUTOSIM_CYCLES ASSERT_USAGE INPUT_XDC_FILE INPUT_SDC_FILE)
-  set(multiValueArgs SOURCES TESTBENCH_SOURCES DEFINES BIT_TO_V_EXTRA_ARGS)
+  set(multiValueArgs SOURCES TESTBENCH_SOURCES DEFINES BIT_TO_V_EXTRA_ARGS NET_PATCH_EXTRA_ARGS)
   cmake_parse_arguments(
     ADD_FPGA_TARGET
     "${options}"
@@ -2021,7 +2025,7 @@ function(ADD_FPGA_TARGET)
       NET_PATCH_TOOL_CMD_FOR_TARGET_LIST UNIX_COMMAND ${NET_PATCH_TOOL_CMD_FOR_TARGET}
     )
 
-    # Configure and append extra args
+    # Configure and append device-specific extra args
     get_target_property(NET_PATCH_EXTRA_ARGS ${DEVICE} NET_PATCH_EXTRA_ARGS)
     if (NOT "${NET_PATCH_EXTRA_ARGS}" MATCHES ".*NOTFOUND")
       string(CONFIGURE ${NET_PATCH_EXTRA_ARGS} NET_PATCH_EXTRA_ARGS_FOR_TARGET)
@@ -2030,6 +2034,17 @@ function(ADD_FPGA_TARGET)
       )
     else()
       set(NET_PATCH_EXTRA_ARGS_FOR_TARGET_LIST)
+    endif()
+    
+    # Configure and append design-specific extra args
+    set(NET_PATCH_DESIGN_EXTRA_ARGS ${ADD_FPGA_TARGET_NET_PATCH_EXTRA_ARGS})
+    if (NOT "${NET_PATCH_DESIGN_EXTRA_ARGS}" STREQUAL "")
+      string(CONFIGURE ${NET_PATCH_DESIGN_EXTRA_ARGS} NET_PATCH_DESIGN_EXTRA_ARGS_FOR_TARGET)
+      separate_arguments(
+        NET_PATCH_DESIGN_EXTRA_ARGS_FOR_TARGET_LIST UNIX_COMMAND ${NET_PATCH_DESIGN_EXTRA_ARGS_FOR_TARGET}
+      )
+    else()
+      set(NET_PATCH_DESIGN_EXTRA_ARGS_FOR_TARGET_LIST)
     endif()
 
     # Extra dependencies
@@ -2042,7 +2057,10 @@ function(ADD_FPGA_TARGET)
     add_custom_command(
       OUTPUT ${OUT_NET} ${OUT_EBLIF} ${OUT_PLACE}
       DEPENDS ${IN_NET} ${IN_EBLIF} ${IN_PLACE} ${NET_PATCH_TOOL} ${NET_PATCH_DEPS}
-      COMMAND ${NET_PATCH_TOOL_CMD_FOR_TARGET_LIST} ${NET_PATCH_EXTRA_ARGS_FOR_TARGET_LIST}
+      COMMAND
+        ${NET_PATCH_TOOL_CMD_FOR_TARGET_LIST}
+        ${NET_PATCH_EXTRA_ARGS_FOR_TARGET_LIST}
+        ${NET_PATCH_DESIGN_EXTRA_ARGS_FOR_TARGET_LIST}
       WORKING_DIRECTORY ${OUT_LOCAL}
     )
 
