@@ -16,6 +16,8 @@ add_fpga_target(
   )
 
 add_dependencies(all_qlf_k4n8_tests_adder post_synthesis_verify)
+#add_dependencies(post_synthesis_verify counter_16bit_test2-umc22-adder_analysis)
+
 add_custom_target(
   post_synthesis_verify
   COMMAND diff ${BITSTREAM} ${GOLDEN_BITSTREAM}
