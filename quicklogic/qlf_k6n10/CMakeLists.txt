@@ -26,4 +26,5 @@ quicklogic_define_qlf_arch(
 add_subdirectory(devices)
 include(boards.cmake)
 
+
 add_subdirectory(tests)
