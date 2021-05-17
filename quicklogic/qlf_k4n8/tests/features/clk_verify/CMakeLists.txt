@@ -18,6 +18,6 @@ add_dependencies(all_qlf_k4n8_tests_adder clk_verify)
 
 add_custom_target(
   clk_verify
-  COMMAND egrep -q "Fmax: 4[0-8]." ${ROUTE_LOG} 
+  COMMAND egrep -q "Fmax: [3-4][0-9]." ${ROUTE_LOG} 
   DEPENDS dct_mac_test3-umc22-adder_bit
   )
