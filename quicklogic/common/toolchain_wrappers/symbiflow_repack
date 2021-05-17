@@ -16,13 +16,14 @@ RULES=${ARCH_DIR}/${DEVICE_1}.repacking_rules.json
 
 JSON_ARGS=
 if [ ! -z "${JSON}" ]; then
-  JSON_ARGS=--repacking-constraints ${JSON}
+  JSON_ARGS=--json-constraints ${JSON}
 fi
 
 python3 ${REPACK} \
   --vpr-arch ${ARCH_DEF} \
   --repacking-rules ${RULES} \
   $JSON_ARGS \
+  --pcf-constraints ${PCF} \
   --eblif-in ${DESIGN}.eblif \
   --net-in ${DESIGN}.net \
   --place-in ${DESIGN}.place \
