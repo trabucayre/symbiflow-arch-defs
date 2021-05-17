@@ -18,6 +18,8 @@ function(DEFINE_ARCH)
   #    PROTOTYPE_PART <prototype_part>
   #    YOSYS_SYNTH_SCRIPT <yosys_script>
   #    YOSYS_CONV_SCRIPT <yosys_script>
+  #    [SDC_PATCH_TOOL <path to a SDC file patching utility>]
+  #    [SDC_PATCH_TOOL_CMD <command to run SDC_PATCH_TOOL>]
   #    BITSTREAM_EXTENSION <ext>
   #    [VPR_ARCH_ARGS <arg list>]
   #    RR_PATCH_TOOL <path to rr_patch tool>
@@ -134,6 +136,13 @@ function(DEFINE_ARCH)
   # * OUT_PLACE - VPR .place file to be used by router
   # * VPR_ARCH  - Path to VPR architecture XML file
   #
+  # SDC_PATCH_TOOL allows to specify a utility that processes SDC constraints
+  #  file provided by a user prior to feedin it to VPR.
+  #
+  # SDC_PATCH_TOOL_CMD variables:
+  #
+  # * TBD.
+  #
   # HLC_TO_BIT_CMD variables:
   #
   # * HLC_TO_BIT - Value of HLC_TO_BIT property of <arch>.
@@ -181,6 +190,8 @@ function(DEFINE_ARCH)
     PLACE_TOOL_CMD
     PLACE_CONSTR_TOOL
     PLACE_CONSTR_TOOL_CMD
+    SDC_PATCH_TOOL
+    SDC_PATCH_TOOL_CMD
     HLC_TO_BIT
     HLC_TO_BIT_CMD
     FASM_TO_BIT
@@ -240,6 +251,8 @@ function(DEFINE_ARCH)
     CELLS_SIM
     RR_PATCH_TOOL
     RR_PATCH_CMD
+    SDC_PATCH_TOOL
+    SDC_PATCH_TOOL_CMD
     NET_PATCH_TOOL
     NET_PATCH_TOOL_CMD
     BIT_TO_FASM

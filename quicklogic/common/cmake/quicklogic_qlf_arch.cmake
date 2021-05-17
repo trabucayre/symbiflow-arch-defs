@@ -60,6 +60,15 @@ function(QUICKLOGIC_DEFINE_QLF_ARCH)
     NO_TEST_PINS
     NO_PLACE_CONSTR
 
+    SDC_PATCH_TOOL
+      ${SRC_PATCH_TOOL}
+    SDC_PATCH_TOOL_CMD "${CMAKE_COMMAND} -E env \
+      PYTHONPATH=${symbiflow-arch-defs_SOURCE_DIR}/utils \
+      \${QUIET_CMD} \${PYTHON3} \${SDC_PATCH_TOOL} \
+         --sdc-in \${SDC_IN} \
+         --pcf ${INPUT_IO_FILE} \
+         --sdc-out \${SDC_OUT}"
+
     NET_PATCH_TOOL
       ${REPACKER_PATH}
     NET_PATCH_TOOL_CMD "${CMAKE_COMMAND} -E env \
