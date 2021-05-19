@@ -16,6 +16,6 @@ add_fpga_target(
 add_dependencies(all_qlf_k4n8_tests_adder bit_verify)
 add_custom_target(
   bit_verify
-  COMMAND wc -l <${BITSTREAM} | grep -q 25570
+  COMMAND wc -l <${BITSTREAM} | grep -q 25572
   DEPENDS and2_or2_test4-umc22-adder_bit
   )
