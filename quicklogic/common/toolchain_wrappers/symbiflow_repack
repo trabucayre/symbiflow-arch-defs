@@ -23,7 +23,7 @@ python3 ${REPACK} \
   --vpr-arch ${ARCH_DEF} \
   --repacking-rules ${RULES} \
   $JSON_ARGS \
-  --pcf-constraints ${PCF} \
+  --pcf-constraints ${PCF_PATH}\
   --eblif-in ${DESIGN}.eblif \
   --net-in ${DESIGN}.net \
   --place-in ${DESIGN}.place \
