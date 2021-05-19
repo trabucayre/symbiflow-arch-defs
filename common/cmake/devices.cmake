@@ -1714,6 +1714,70 @@ function(ADD_FPGA_TARGET)
     set(SDC_DEPS ${ADD_FPGA_TARGET_INPUT_SDC_FILE})
   endif()
 
+  # Process SDC
+  # -------------------------------------------------------------------------
+  get_target_property(SDC_PATCH_TOOL     ${ARCH} SDC_PATCH_TOOL)
+  get_target_property(SDC_PATCH_TOOL_CMD ${ARCH} SDC_PATCH_TOOL_CMD)
+
+  if (NOT "${SDC_PATCH_TOOL}" MATCHES ".*-NOTFOUND" AND NOT "${SDC_PATCH_TOOL}" STREQUAL "")
+
+    set(SDC_IN ${SDC_OUT})
+
+    set(SDC_OUT ${OUT_LOCAL}/${TOP}.patched.sdc)
+    set(SDC_OUT_REL ${OUT_LOCAL_REL}/${TOP}.patched.sdc)
+
+    # Configure the base command
+    string(CONFIGURE ${SDC_PATCH_TOOL_CMD} SDC_PATCH_TOOL_CMD_FOR_TARGET)
+    separate_arguments(
+      SDC_PATCH_TOOL_CMD_FOR_TARGET_LIST UNIX_COMMAND ${SDC_PATCH_TOOL_CMD_FOR_TARGET}
+    )
+
+    # Configure and append device-specific extra args
+    get_target_property(SDC_PATCH_EXTRA_ARGS ${DEVICE} SDC_PATCH_EXTRA_ARGS)
+    if (NOT "${SDC_PATCH_EXTRA_ARGS}" MATCHES ".*NOTFOUND")
+      string(CONFIGURE ${SDC_PATCH_EXTRA_ARGS} SDC_PATCH_EXTRA_ARGS_FOR_TARGET)
+      separate_arguments(
+        SDC_PATCH_EXTRA_ARGS_FOR_TARGET_LIST UNIX_COMMAND ${SDC_PATCH_EXTRA_ARGS_FOR_TARGET}
+      )
+    else()
+      set(SDC_PATCH_EXTRA_ARGS_FOR_TARGET_LIST)
+    endif()
+    
+    # Configure and append design-specific extra args
+    set(SDC_PATCH_DESIGN_EXTRA_ARGS ${ADD_FPGA_TARGET_SDC_PATCH_EXTRA_ARGS})
+    if (NOT "${SDC_PATCH_DESIGN_EXTRA_ARGS}" STREQUAL "")
+      string(CONFIGURE ${SDC_PATCH_DESIGN_EXTRA_ARGS} SDC_PATCH_DESIGN_EXTRA_ARGS_FOR_TARGET)
+      separate_arguments(
+        SDC_PATCH_DESIGN_EXTRA_ARGS_FOR_TARGET_LIST UNIX_COMMAND ${SDC_PATCH_DESIGN_EXTRA_ARGS_FOR_TARGET}
+      )
+    else()
+      set(SDC_PATCH_DESIGN_EXTRA_ARGS_FOR_TARGET_LIST)
+    endif()
+
+    # Extra dependencies
+    get_target_property(SDC_PATCH_DEPS ${DEVICE} SDC_PATCH_DEPS)
+    if ("${SDC_PATCH_DEPS}" MATCHES ".*NOTFOUND")
+      set(SDC_PATCH_DEPS)
+    endif ()
+
+    # Add targets for patched SDC
+    add_custom_command(
+      OUTPUT ${SDC_OUT}
+      DEPENDS ${SDC_IN} ${INPUT_IO_FILE} ${SDC_PATCH_TOOL} ${SDC_PATCH_DEPS}
+      COMMAND
+        ${SDC_PATCH_TOOL_CMD_FOR_TARGET_LIST}
+        ${SDC_PATCH_EXTRA_ARGS_FOR_TARGET_LIST}
+        ${SDC_PATCH_DESIGN_EXTRA_ARGS_FOR_TARGET_LIST}
+      WORKING_DIRECTORY ${OUT_LOCAL}
+    )
+
+    add_output_to_fpga_target(${NAME} PATCHED_SDC ${SDC_OUT_REL})
+
+    add_custom_target(${NAME}_patch_sdc DEPENDS ${SDC_OUT})
+
+  endif ()
+
+
   # Generate routing and generate HLC.
   set(OUT_ROUTE ${OUT_LOCAL}/${TOP}.route)
 
