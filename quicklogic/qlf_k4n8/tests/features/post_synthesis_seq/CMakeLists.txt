@@ -17,7 +17,9 @@ add_dependencies(all_qlf_k4n8_tests_adder post_synthesis_seq)
 
 add_custom_target(
   post_synthesis_seq
-  COMMAND iverilog -v -gspecify -o counter_16bit.vvp ${COUNTER_TB} ${POST_SYNTH_FILE} ${CELLS_SIM}
-  COMMAND vvp -v counter_16bit.vvp | egrep -q -w "97"
+  COMMAND ${IVERILOG} -v -gspecify -o counter_16bit.vvp ${COUNTER_TB} ${POST_SYNTH_FILE} ${CELLS_SIM}
+  DEPENDS ${IVERILOG}
+  COMMAND ${VVP} -v counter_16bit.vvp | egrep -q -w "97"
+  DEPENDS ${VVP}
   DEPENDS counter_16bit_test4-umc22-adder_analysis
   )

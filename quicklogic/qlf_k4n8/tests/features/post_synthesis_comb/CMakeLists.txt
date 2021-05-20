@@ -17,7 +17,9 @@ add_dependencies(all_qlf_k4n8_tests_adder post_synthesis_comb)
 
 add_custom_target(
   post_synthesis_comb
-  COMMAND iverilog -v -gspecify -o multiplier_8bit.vvp ${MULT_TB} ${POST_SYNTH_FILE} ${CELLS_SIM}
-  COMMAND vvp -v multiplier_8bit.vvp | egrep -q "PASS"
+  COMMAND ${IVERILOG} -v -gspecify -o multiplier_8bit.vvp ${MULT_TB} ${POST_SYNTH_FILE} ${CELLS_SIM}
+  DEPENDS ${IVERILOG}
+  COMMAND ${VVP} -v multiplier_8bit.vvp | egrep -q "PASS"
+  DEPENDS ${VVP}
   DEPENDS multiplier_8bit_test4-umc22-adder_analysis
   )
