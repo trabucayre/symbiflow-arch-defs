@@ -479,9 +479,15 @@ else
 	JSON_PATH=""
 fi
 
+if [[ -f $SOURCE/$PCF ]];then
+	PCF_PATH=`realpath $SOURCE/$PCF`
+elif [[ -f $PCF ]];then
+	PCF_PATH=`realpath $PCF`
+fi
 
 export PART=${CSV_PATH}
 export JSON=${JSON_PATH}
+export PCF_PATH=${PCF_PATH}
 
 MAKE_FILE=${CURR_DIR}/Makefile.symbiflow
 LOG_FILE=${CURR_DIR}/${BUILDDIR}/${TOP}.log
@@ -505,6 +511,7 @@ else
   	 touch ${CURR_DIR}/build/${TOP}_dummy.sdc
    	 SDC_MAKE="\${current_dir}/build/${TOP}_dummy.sdc"
 fi
+
 
 echo -e ".PHONY:\${BUILDDIR}\n
 current_dir := $CURR_DIR\n\
