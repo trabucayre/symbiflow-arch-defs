@@ -30,6 +30,7 @@ jobs:
           make env
           cd build
           ninja -j$(nproc) all_qlf_k4n8_tests_adder
+
   install:
     runs-on: ubuntu-18.04
     steps:
@@ -53,6 +54,9 @@ jobs:
           make env
           cd build
           ninja install -j$(nproc)
+          # Testing binary toolchain
+          export CTEST_OUTPUT_ON_FAILURE=1
+          ctest -R binary_toolchain_test_counter
           cd ${ROOT}
           tar -acf quicklogic-arch-defs-qlf-${GITHASH}.tar.gz ${INSTALL_DIR}/*
       - uses: actions/upload-artifact@v2
