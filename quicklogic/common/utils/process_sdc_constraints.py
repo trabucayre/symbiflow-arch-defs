@@ -10,7 +10,7 @@ file are actually present in a design and whether the pin names are valid.
 import argparse
 import re
 
-from lib.parse_pcf import parse_simple_pcf
+from lib.parse_pcf import parse_simple_pcf, PcfIoConstraint
 
 # =============================================================================
 
@@ -76,9 +76,10 @@ def main():
     # Build a pad-to-net map
     pad_to_net = {}
     for constr in pcf_constraints:
-        assert constr.pad not in pad_to_net, \
-            "Multiple nets constrained to pin '{}'".format(constr.pad)
-        pad_to_net[constr.pad] = constr
+        if isinstance(constr, PcfIoConstraint):
+            assert constr.pad not in pad_to_net, \
+                "Multiple nets constrained to pin '{}'".format(constr.pad)
+            pad_to_net[constr.pad] = constr
 
     # Read the input SDC file
     with open(args.sdc_in, "r") as fp:
