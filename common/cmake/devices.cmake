@@ -141,7 +141,9 @@ function(DEFINE_ARCH)
   #
   # SDC_PATCH_TOOL_CMD variables:
   #
-  # * TBD.
+  # * SDC_IN        - Path to the input (source) SDC file
+  # * SDC_OUT       - Path to the output (destination) SDC file
+  # * INPUT_IO_FILE - Path to the input PCF IO constraints file
   #
   # HLC_TO_BIT_CMD variables:
   #
