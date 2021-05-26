@@ -1705,7 +1705,8 @@ function(ADD_FPGA_TARGET)
     get_file_location(SDC_LOCATION ${OUT_SDC_REL})
     set(SDC_ARG --sdc_file ${SDC_LOCATION})
     set(SDC_FILE ${SDC_LOCATION})
-    set(SDC_DEPS ${OUT_SDC_REL})
+    append_file_dependency(SDC_DEPS ${OUT_SDC_REL})
+    #set(SDC_DEPS ${OUT_SDC_REL})
   endif()
 
   if(NOT "${ADD_FPGA_TARGET_INPUT_SDC_FILE}" STREQUAL "")
@@ -1713,7 +1714,8 @@ function(ADD_FPGA_TARGET)
     get_file_location(SDC_LOCATION ${ADD_FPGA_TARGET_INPUT_SDC_FILE})
     set(SDC_ARG --sdc_file ${SDC_LOCATION})
     set(SDC_FILE ${SDC_LOCATION})
-    set(SDC_DEPS ${ADD_FPGA_TARGET_INPUT_SDC_FILE})
+    #set(SDC_DEPS ${ADD_FPGA_TARGET_INPUT_SDC_FILE})
+    append_file_dependency(SDC_DEPS ${ADD_FPGA_TARGET_INPUT_SDC_FILE})
   endif()
 
   # Process SDC
@@ -1721,12 +1723,15 @@ function(ADD_FPGA_TARGET)
   get_target_property(SDC_PATCH_TOOL     ${ARCH} SDC_PATCH_TOOL)
   get_target_property(SDC_PATCH_TOOL_CMD ${ARCH} SDC_PATCH_TOOL_CMD)
 
-  if (NOT "${SDC_PATCH_TOOL}" MATCHES ".*-NOTFOUND" AND NOT "${SDC_PATCH_TOOL}" STREQUAL "")
+  if (NOT "${SDC_PATCH_TOOL}" MATCHES ".*-NOTFOUND" AND
+      NOT "${SDC_PATCH_TOOL}" STREQUAL "" AND
+      NOT "${SDC_FILE}" STREQUAL "" AND
+      NOT "${INPUT_IO_FILE}" STREQUAL "")
 
-    set(SDC_IN ${SDC_OUT})
+    set(IN_SDC ${SDC_FILE})
 
-    set(SDC_OUT ${OUT_LOCAL}/${TOP}.patched.sdc)
-    set(SDC_OUT_REL ${OUT_LOCAL_REL}/${TOP}.patched.sdc)
+    set(OUT_SDC ${OUT_LOCAL}/${TOP}.patched.sdc)
+    set(OUT_SDC_REL ${OUT_LOCAL_REL}/${TOP}.patched.sdc)
 
     # Configure the base command
     string(CONFIGURE ${SDC_PATCH_TOOL_CMD} SDC_PATCH_TOOL_CMD_FOR_TARGET)
@@ -1764,8 +1769,8 @@ function(ADD_FPGA_TARGET)
 
     # Add targets for patched SDC
     add_custom_command(
-      OUTPUT ${SDC_OUT}
-      DEPENDS ${SDC_IN} ${INPUT_IO_FILE} ${SDC_PATCH_TOOL} ${SDC_PATCH_DEPS}
+      OUTPUT ${OUT_SDC}
+      DEPENDS ${SDC_DEPS} ${INPUT_IO_FILE} ${OUT_EBLIF} ${SDC_PATCH_TOOL} ${SDC_PATCH_DEPS}
       COMMAND
         ${SDC_PATCH_TOOL_CMD_FOR_TARGET_LIST}
         ${SDC_PATCH_EXTRA_ARGS_FOR_TARGET_LIST}
@@ -1773,12 +1778,16 @@ function(ADD_FPGA_TARGET)
       WORKING_DIRECTORY ${OUT_LOCAL}
     )
 
-    add_output_to_fpga_target(${NAME} PATCHED_SDC ${SDC_OUT_REL})
+    add_output_to_fpga_target(${NAME} PATCH_SDC ${OUT_SDC_REL})
 
-    add_custom_target(${NAME}_patch_sdc DEPENDS ${SDC_OUT})
+    # Use the patched SDC in VPR
+    append_file_dependency(VPR_DEPS ${OUT_SDC_REL})
+    set(SDC_ARG --sdc_file ${OUT_SDC})
+    set(SDC_FILE ${OUT_SDC})
+    set(SDC_DEPS "")
+    append_file_dependency(SDC_DEPS ${OUT_SDC_REL})
 
   endif ()
-
 
   # Generate routing and generate HLC.
   set(OUT_ROUTE ${OUT_LOCAL}/${TOP}.route)

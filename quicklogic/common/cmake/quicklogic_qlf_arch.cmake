@@ -33,6 +33,8 @@ function(QUICKLOGIC_DEFINE_QLF_ARCH)
     set(REPACKER_PATH ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/qlf_k4n8/utils/repacker/repack.py)
   endif()
 
+  set(SDC_PATCH_TOOL ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils/process_sdc_constraints.py)
+
   # Define the architecture
   define_arch(
     FAMILY ${FAMILY}
@@ -61,13 +63,15 @@ function(QUICKLOGIC_DEFINE_QLF_ARCH)
     NO_PLACE_CONSTR
 
     SDC_PATCH_TOOL
-      ${SRC_PATCH_TOOL}
+      ${SDC_PATCH_TOOL}
     SDC_PATCH_TOOL_CMD "${CMAKE_COMMAND} -E env \
       PYTHONPATH=${symbiflow-arch-defs_SOURCE_DIR}/utils \
       \${QUIET_CMD} \${PYTHON3} \${SDC_PATCH_TOOL} \
-         --sdc-in \${SDC_IN} \
-         --pcf ${INPUT_IO_FILE} \
-         --sdc-out \${SDC_OUT}"
+         --sdc-in \${IN_SDC} \
+         --pcf \${INPUT_IO_FILE} \
+         --eblif \${OUT_EBLIF} \
+         --pin-map \${PINMAP} \
+         --sdc-out \${OUT_SDC}"
 
     NET_PATCH_TOOL
       ${REPACKER_PATH}

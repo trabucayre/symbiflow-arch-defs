@@ -505,12 +505,7 @@ if ! [ -z "$SDC" ]; then
         echo "The sdc file: $SDC is missing at: $SOURCE"
         exit 1
     else
-        SDC_MAKE="\${current_dir}/build/${TOP}.sdc"
-        if [ -f "$SOURCE"/$PCF_FILE ];then
-            python3 ${PROCESS_SDC} --sdc-in ${CURR_DIR}/${SDC} --pcf ${CURR_DIR}/${PCF} --sdc-out ${CURR_DIR}/build/${TOP}.sdc
-        else
-            cp ${CURR_DIR}/${SDC} ${CURR_DIR}/build/${TOP}.sdc
-        fi
+        SDC_MAKE="$SOURCE/$SDC"
     fi
 else
     touch ${CURR_DIR}/build/${TOP}_dummy.sdc
@@ -530,8 +525,10 @@ FAMILY := $FAMILY\n\
 ANALYSIS_CORNER := $PNR_CORNER\n\
 PNR_CORNER := $ANALYSIS_CORNER\n\
 PCF := $PCF_MAKE\n\
-SDC := $SDC_MAKE\n\
+PINMAP_CSV := $CSV_PATH\n\
+SDC_IN := $SDC_MAKE\n\
 BUILDDIR := build\n\n\
+SDC := \${current_dir}/\${BUILDDIR}/\${TOP}.sdc
 
 all: \${BUILDDIR}/\${TOP}.bit\n\
 \n\
@@ -541,7 +538,9 @@ all: \${BUILDDIR}/\${TOP}.bit\n\
   endif\n\
 	cd \${BUILDDIR} && symbiflow_synth -t \${TOP} -v \${VERILOG} -f \${FAMILY} -d \${DEVICE} -p \${PCF} > $LOG_FILE 2>&1\n\
 \n\
-\${BUILDDIR}/\${TOP}.net: \${BUILDDIR}/\${TOP}.eblif\n\
+\${BUILDDIR}/\${TOP}.sdc: \${BUILDDIR}/\${TOP}.eblif\n\
+	python3 ${PROCESS_SDC} --sdc-in \${SDC_IN} --sdc-out \$@ --pcf \${PCF} --eblif \${BUILDDIR}/\${TOP}.eblif --pin-map \${PINMAP_CSV}\n\
+\${BUILDDIR}/\${TOP}.net: \${BUILDDIR}/\${TOP}.eblif \${BUILDDIR}/\${TOP}.sdc\n\
 	cd \${BUILDDIR} && symbiflow_pack -e \${TOP}.eblif -f \${FAMILY} -d \${DEVICE} -s \${SDC} -c \${PNR_CORNER} >> $LOG_FILE 2>&1\n\
 \n\
 \${BUILDDIR}/\${TOP}.place: \${BUILDDIR}/\${TOP}.net \${PCF}\n\
