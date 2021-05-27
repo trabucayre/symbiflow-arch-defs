@@ -15,7 +15,7 @@ ${BUILDDIR}/${TOP}.bit:
 	ql_symbiflow -compile -src ${current_dir} -d ${FAMILY} -t ${TOP} -v ${VERILOG} -p ${PCF} -P ${PINMAP} -s ${SDC}
 
 ${BUILDDIR}/${TOP}.post_v: ${BUILDDIR}/${TOP}.bit
-	make -f Makefile.symbiflow build/top.post_v
+	make -f Makefile.symbiflow build/top.post_d
 
 clean:
 	rm -rf ${BUILDDIR}
