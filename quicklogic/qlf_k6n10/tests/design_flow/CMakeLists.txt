@@ -5,7 +5,9 @@ add_subdirectory(and2)
 add_subdirectory(and2_latch)
 add_subdirectory(bin2bcd)
 add_subdirectory(rs_decoder_1)
-add_subdirectory(unsigned_mult_80)
+# FIXME: Temoprarly disabled. This tests uses the same source files as one for
+# qlf_k4n8 which creates a conflict in CMake (two targets of the same name).
+#add_subdirectory(unsigned_mult_80)
 add_subdirectory(adder_64)
 add_subdirectory(top_120_13)
 add_subdirectory(multiplier_8bit)
