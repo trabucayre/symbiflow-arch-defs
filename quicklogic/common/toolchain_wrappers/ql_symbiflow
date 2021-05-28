@@ -542,7 +542,7 @@ all: \${BUILDDIR}/\${TOP}.bit\n\
   ifneq (\"\$(wildcard \$(HEX_FILES))\",\"\")\n\
 	\$(shell cp \${current_dir}/*.hex \${BUILDDIR})\n\
   endif\n\
-	cd \${BUILDDIR} && symbiflow_synth -t \${TOP} -v \${VERILOG} -f \${FAMILY} -d \${DEVICE} -p \${PCF} > $LOG_FILE 2>&1\n\
+	cd \${BUILDDIR} && symbiflow_synth -t \${TOP} -v \${VERILOG} -F \${FAMILY} -d \${DEVICE} -p \${PCF} > $LOG_FILE 2>&1\n\
 \n\
 \${BUILDDIR}/\${TOP}.sdc: \${BUILDDIR}/\${TOP}.eblif\n\
 	python3 ${PROCESS_SDC} --sdc-in \${SDC_IN} --sdc-out \$@ --pcf \${PCF} --eblif \${BUILDDIR}/\${TOP}.eblif --pin-map \${PINMAP_CSV}\n\
