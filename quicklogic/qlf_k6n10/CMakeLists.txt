@@ -11,7 +11,7 @@ set(VPR_ARCH_ARGS "\
     --clock_modeling ideal \
     --place_delta_delay_matrix_calculation_method dijkstra \
     --place_delay_model delta_override \
-    --router_lookahead extended_map "
+    --router_lookahead extended_map --timing_report_npaths 10000 "
 )
 
 # Define the architecture

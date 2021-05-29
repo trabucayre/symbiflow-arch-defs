@@ -14,6 +14,9 @@ add_subdirectory(multiplier_8bit)
 #add_subdirectory(shift_reg_8192)
 #add_subdirectory(bram)
 #add_subdirectory(mac_16)
+add_subdirectory(VexRiscv)
+add_subdirectory(conv2d)
+add_subdirectory(conv2d_no_ksa)
 
 #The k6n10 architecture can be scaled up to be able to run
 #Ressource consuming testcases below

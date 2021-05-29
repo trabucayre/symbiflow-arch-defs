@@ -26,7 +26,7 @@ set(VPR_ARCH_ARGS "\
     --place_delay_model delta_override \
     --router_lookahead extended_map \
     --allow_dangling_combinational_nodes on \
-    --absorb_buffer_luts off "
+    --absorb_buffer_luts off --timing_report_npaths 10000 "
 )
 
 # Define the architecture
