@@ -5,14 +5,15 @@ add_subdirectory(and2)
 add_subdirectory(and2_latch)
 add_subdirectory(bin2bcd)
 add_subdirectory(rs_decoder_1)
-# TODO: this design takes quite a large amount of time to complete, due to congestion.
+# FIXME: Temoprarly disabled. This tests uses the same source files as one for
+# qlf_k4n8 which creates a conflict in CMake (two targets of the same name).
 #add_subdirectory(unsigned_mult_80)
 add_subdirectory(adder_64)
 add_subdirectory(top_120_13)
 add_subdirectory(multiplier_8bit)
-# TODO: re-enable these tests once the ql-design submodule is updated with the designs.
-#add_subdirectory(shift_reg_8192)
-#add_subdirectory(bram)
+add_subdirectory(shift_reg_8192)
+add_subdirectory(bram)
+#TODO: Add this testcase after yosys plugin support dsp
 #add_subdirectory(mac_16)
 add_subdirectory(VexRiscv)
 add_subdirectory(conv2d)
