@@ -1713,7 +1713,7 @@ function(ADD_FPGA_TARGET)
     set(SDC_ARG --sdc_file ${SDC_LOCATION})
     set(SDC_FILE ${SDC_LOCATION})
     append_file_dependency(SDC_DEPS ${OUT_SDC_REL})
-    #set(SDC_DEPS ${OUT_SDC_REL})
+    set(SDC_DEPS ${OUT_SDC_REL})
   endif()
 
   if(NOT "${ADD_FPGA_TARGET_INPUT_SDC_FILE}" STREQUAL "")
@@ -1721,7 +1721,7 @@ function(ADD_FPGA_TARGET)
     get_file_location(SDC_LOCATION ${ADD_FPGA_TARGET_INPUT_SDC_FILE})
     set(SDC_ARG --sdc_file ${SDC_LOCATION})
     set(SDC_FILE ${SDC_LOCATION})
-    #set(SDC_DEPS ${ADD_FPGA_TARGET_INPUT_SDC_FILE})
+    set(SDC_DEPS ${ADD_FPGA_TARGET_INPUT_SDC_FILE})
     append_file_dependency(SDC_DEPS ${ADD_FPGA_TARGET_INPUT_SDC_FILE})
   endif()
 
@@ -1734,6 +1734,7 @@ function(ADD_FPGA_TARGET)
       NOT "${SDC_PATCH_TOOL}" STREQUAL "" AND
       NOT "${SDC_FILE}" STREQUAL "" AND
       NOT "${INPUT_IO_FILE}" STREQUAL "")
+    set(SDC_DEPS "")
 
     set(IN_SDC ${SDC_FILE})
 
@@ -1756,7 +1757,7 @@ function(ADD_FPGA_TARGET)
     else()
       set(SDC_PATCH_EXTRA_ARGS_FOR_TARGET_LIST)
     endif()
-    
+
     # Configure and append design-specific extra args
     set(SDC_PATCH_DESIGN_EXTRA_ARGS ${ADD_FPGA_TARGET_SDC_PATCH_EXTRA_ARGS})
     if (NOT "${SDC_PATCH_DESIGN_EXTRA_ARGS}" STREQUAL "")
@@ -2130,7 +2131,7 @@ function(ADD_FPGA_TARGET)
     else()
       set(NET_PATCH_EXTRA_ARGS_FOR_TARGET_LIST)
     endif()
-    
+
     # Configure and append design-specific extra args
     set(NET_PATCH_DESIGN_EXTRA_ARGS ${ADD_FPGA_TARGET_NET_PATCH_EXTRA_ARGS})
     if (NOT "${NET_PATCH_DESIGN_EXTRA_ARGS}" STREQUAL "")
