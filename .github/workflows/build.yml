@@ -71,7 +71,7 @@ jobs:
           ninja install -j$(nproc)
           # Testing binary toolchain
           export CTEST_OUTPUT_ON_FAILURE=1
-          ctest -R binary_toolchain_test_counter
+          ctest -R binary_toolchain_test_*
           cd ${ROOT}
           tar -acf quicklogic-arch-defs-qlf-${GITHASH}.tar.gz ${INSTALL_DIR}/*
       - uses: actions/upload-artifact@v2
