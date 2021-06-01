@@ -11,6 +11,21 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  testing:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Build
+        env:
+          CI: TEST
+        run: |
+          sudo apt update
+          sudo apt install -y g++-8 gcc-8 colordiff coreutils graphviz inkscape make git unzip cmake
+          make env
+
   build:
     runs-on: ubuntu-18.04
     steps:
