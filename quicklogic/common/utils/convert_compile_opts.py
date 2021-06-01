@@ -50,13 +50,13 @@ def parse_options(lines, opts=None):
             break
 
         # Find ending of a block comments. Throw an error if none is found
-        p1 = opt_string.find("*/", p0+2)
+        p1 = opt_string.find("*/", p0 + 2)
         if p1 == -1:
             eprint("ERROR: Unbalanced block comment!")
             exit(-1)
 
         # Remove the comment
-        opt_string = opt_string[:p0] + opt_string[p1+2:]
+        opt_string = opt_string[:p0] + opt_string[p1 + 2:]
 
     # Initialize options if not given
     if opts is None:
@@ -72,13 +72,15 @@ def parse_options(lines, opts=None):
     while True:
 
         # Get the option
-        try: opt = next(parts)
+        try:
+            opt = next(parts)
         except StopIteration:
             break
 
         # A file containing options
         if opt == "-f":
-            try: arg = next(parts)
+            try:
+                arg = next(parts)
             except StopIteration:
                 eprint("ERROR: Missing file name for '-f'")
                 exit(-1)
@@ -95,7 +97,8 @@ def parse_options(lines, opts=None):
 
         # Verilog library directory
         elif opt == "-y":
-            try: arg = next(parts)
+            try:
+                arg = next(parts)
             except StopIteration:
                 eprint("ERROR: Missing directory name for '-y'")
                 exit(-1)
@@ -144,6 +147,7 @@ def parse_options(lines, opts=None):
 
     return opts
 
+
 def quote(s):
     """
     Quotes a string if it needs it
@@ -152,6 +156,7 @@ def quote(s):
         return "\"" + s + "\""
     else:
         return s
+
 
 def translate_options(opts):
     """
@@ -172,7 +177,7 @@ def translate_options(opts):
         else:
             cmd = "verilog_defaults -add -D{}".format(key)
         commands.append(cmd)
-    
+
     # Since Yosys does not automatically search for an unknown module in
     # verilog files make it read all library files upfront. Do this by
     # searching for files with extensions provided with "+libext+" in
@@ -189,8 +194,8 @@ def translate_options(opts):
 
     return commands
 
-# =============================================================================
 
+# =============================================================================
 
 if __name__ == "__main__":
 
@@ -202,4 +207,3 @@ if __name__ == "__main__":
     cmds = translate_options(opts)
     for cmd in cmds:
         print(cmd)
-
