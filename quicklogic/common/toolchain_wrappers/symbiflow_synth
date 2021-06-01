@@ -143,15 +143,20 @@ else
 fi
 
 YOSYS_COMMANDS=`echo ${EXTRA_ARGS[*]} | python3 ${CONVERT_OPTS}`
-YOSYS_COMMANDS="${YOSYS_COMMANDS//$'\n'/';'}"
+YOSYS_COMMANDS="${YOSYS_COMMANDS//$'\n'/'; '}"
 
 LOG=${TOP}_synth.log
 
 YOSYS_SCRIPT="tcl ${SYNTH_TCL_PATH}"
-if [ ! -z ${YOSYS_COMMANDS} ]; then
-    YOSYS_SCRIPT="$YOSYS_COMMANDS;$YOSYS_SCRIPT"
+
+for f in ${VERILOG_FILES[*]}; do
+    YOSYS_SCRIPT="read_verilog ${f}; $YOSYS_SCRIPT"
+done
+
+if [ ! -z "${YOSYS_COMMANDS}" ]; then
+    YOSYS_SCRIPT="$YOSYS_COMMANDS; $YOSYS_SCRIPT"
 fi
 
-yosys -p "${YOSYS_SCRIPT}" -l $LOG ${VERILOG_FILES[*]}
+yosys -p "${YOSYS_SCRIPT}" -l $LOG
 python3 ${SPLIT_INOUTS} -i ${OUT_JSON} -o ${SYNTH_JSON}
 yosys -p "read_json $SYNTH_JSON; tcl ${CONV_TCL_PATH}"
