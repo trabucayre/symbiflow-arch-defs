@@ -9,7 +9,7 @@ VERILOG := ${TEST}.v
 SDC		:= ${TEST}.sdc
 PCF		:= ${TEST}.pcf
 
-all: ${BUILDDIR}/${TOP}.post_verilog
+all: ${BUILDDIR}/${TOP}.post_v
 
 ${BUILDDIR}/${TOP}.check_no_pcf_no_pinmap:
 	ql_symbiflow -compile -src ${current_dir} -d ${FAMILY} -t ${TOP} -v ${VERILOG}
@@ -20,8 +20,8 @@ ${BUILDDIR}/${TOP}.check_no_pcf: ${BUILDDIR}/${TOP}.check_no_pcf_no_pinmap
 ${BUILDDIR}/${TOP}.bit: ${BUILDDIR}/${TOP}.check_no_pcf
 	ql_symbiflow -compile -src ${current_dir} -d ${FAMILY} -t ${TOP} -v ${VERILOG} -p ${PCF} -P ${PINMAP} -s ${SDC}
 
-${BUILDDIR}/${TOP}.post_verilog: ${BUILDDIR}/${TOP}.bit
-	make -f Makefile.symbiflow build/top.post_verilog
+${BUILDDIR}/${TOP}.post_v: ${BUILDDIR}/${TOP}.bit
+	make -f Makefile.symbiflow build/top.post_v
 
 clean:
 	rm -rf ${BUILDDIR}
