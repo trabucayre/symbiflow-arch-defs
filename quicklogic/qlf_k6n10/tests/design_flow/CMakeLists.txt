@@ -13,9 +13,9 @@ add_subdirectory(top_120_13)
 add_subdirectory(multiplier_8bit)
 add_subdirectory(shift_reg_8192)
 add_subdirectory(bram)
-add_subdirectory(VexRiscv)
-add_subdirectory(conv2d)
-add_subdirectory(conv2d_no_ksa)
+#add_subdirectory(VexRiscv)
+#add_subdirectory(conv2d)
+#add_subdirectory(conv2d_no_ksa)
 #TODO: Add this testcase after yosys plugin support dsp
 #add_subdirectory(mac_16)
 
