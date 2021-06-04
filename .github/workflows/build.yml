@@ -65,7 +65,7 @@ jobs:
           export INSTALL_DIR=quicklogic-arch-defs
           export GITHASH=$(git rev-parse --short HEAD)
           mkdir ${ROOT}/${INSTALL_DIR}
-          export CMAKE_FLAGS="-GNinja -DINSTALL_FAMILIES=qlf_k4n8 -DCMAKE_INSTALL_PREFIX=${ROOT}/${INSTALL_DIR}"
+          export CMAKE_FLAGS="-GNinja -DINSTALL_FAMILIES=qlf_k4n8,qlf_k6n10 -DCMAKE_INSTALL_PREFIX=${ROOT}/${INSTALL_DIR}"
           make env
           cd build
           ninja install -j$(nproc)
