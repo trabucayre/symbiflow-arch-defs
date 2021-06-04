@@ -29,10 +29,7 @@ function(QUICKLOGIC_DEFINE_QLF_ARCH)
 
   get_target_property_required(QLF_FASM env QLF_FASM)
 
-  if("${FAMILY}" STREQUAL "qlf_k4n8")
-    set(REPACKER_PATH ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/qlf_k4n8/utils/repacker/repack.py)
-  endif()
-
+  set(REPACKER_PATH ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils/repacker/repack.py)
   set(SDC_PATCH_TOOL ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils/process_sdc_constraints.py)
 
   # Define the architecture
@@ -49,7 +46,7 @@ function(QUICKLOGIC_DEFINE_QLF_ARCH)
     RR_GRAPH_EXT ".bin"
 
     PLACE_TOOL
-      ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/${FAMILY}/utils/create_ioplace.py
+      ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils/create_ioplace.py
     PLACE_TOOL_CMD "${CMAKE_COMMAND} -E env \
       PYTHONPATH=${symbiflow-arch-defs_SOURCE_DIR}/utils:$PYTHONPATH:${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils \
       \${PYTHON3} \${PLACE_TOOL} \
