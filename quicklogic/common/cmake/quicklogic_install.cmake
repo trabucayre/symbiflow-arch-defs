@@ -72,9 +72,6 @@ function(DEFINE_QL_TOOLCHAIN_TARGET)
   install(FILES ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/${FAMILY}/tests/design_flow/counter_16bit/counter_16bit.sdc
           DESTINATION share/symbiflow/tests/counter_16bit
           PERMISSIONS WORLD_READ OWNER_WRITE OWNER_READ GROUP_READ)
-  install(FILES ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/${FAMILY}/tests/design_flow/counter_16bit/clk_constraints.json
-          DESTINATION share/symbiflow/tests/counter_16bit
-          PERMISSIONS WORLD_READ OWNER_WRITE OWNER_READ GROUP_READ)
 
   # install python scripts
   install(FILES ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils/convert_compile_opts.py
