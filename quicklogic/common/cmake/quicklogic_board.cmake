@@ -248,6 +248,9 @@ function(ADD_QUICKLOGIC_BOARD)
       DEVICE ${DEVICE}
       PACKAGE ${PACKAGE}
     )
-  endif()
+#  endif()
+
+   endif()
+
 
 endfunction()
