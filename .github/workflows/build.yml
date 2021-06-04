@@ -16,6 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          lfs: 'true'
           submodules: true
 
       - name: Build
@@ -23,7 +24,7 @@ jobs:
           CI: TEST
         run: |
           sudo apt update
-          sudo apt install -y g++-8 gcc-8 colordiff coreutils graphviz inkscape make git unzip cmake
+          sudo apt install -y g++-8 gcc-8 colordiff coreutils graphviz inkscape make git git-lfs unzip cmake
           make env
 
   build:
@@ -31,12 +32,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          lfs: 'true'
           submodules: true
       - name: Build
         run: |
           sudo rm -rf /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
           sudo apt update
-          sudo apt install -y g++-8 gcc-8 colordiff coreutils graphviz inkscape make git unzip cmake
+          sudo apt install -y g++-8 gcc-8 colordiff coreutils graphviz inkscape make git git-lfs unzip cmake
           mkdir .tmp
           curl -L https://github.com/ninja-build/ninja/releases/download/v1.10.0/ninja-linux.zip -o .tmp/ninja-linux.zip
           unzip .tmp/ninja-linux.zip -d .tmp
@@ -51,12 +53,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          lfs: 'true'
           submodules: true
       - name: Architectures definitions installation
         run: |
           sudo rm -rf /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
           sudo apt update
-          sudo apt install -y g++-8 gcc-8 colordiff coreutils graphviz inkscape make git unzip cmake
+          sudo apt install -y g++-8 gcc-8 colordiff coreutils graphviz inkscape make git git-lfs unzip cmake
           mkdir .tmp
           curl -L https://github.com/ninja-build/ninja/releases/download/v1.10.0/ninja-linux.zip -o .tmp/ninja-linux.zip
           unzip .tmp/ninja-linux.zip -d .tmp
