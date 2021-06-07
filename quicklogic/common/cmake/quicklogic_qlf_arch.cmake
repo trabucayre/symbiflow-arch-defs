@@ -29,7 +29,12 @@ function(QUICKLOGIC_DEFINE_QLF_ARCH)
 
   get_target_property_required(QLF_FASM env QLF_FASM)
 
-  set(REPACKER_PATH ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils/repacker/repack.py)
+  if("${FAMILY}" STREQUAL "qlf_k4n8")
+    set(REPACKER_PATH ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils/repacker/repack.py)
+  else()
+    set(REPACKER_PATH )
+  endif()
+
   set(SDC_PATCH_TOOL ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils/process_sdc_constraints.py)
 
   # Define the architecture
