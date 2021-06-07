@@ -44,6 +44,7 @@ jobs:
           unzip .tmp/ninja-linux.zip -d .tmp
           export PATH=$PATH:$PWD/.tmp
           export CMAKE_FLAGS="-GNinja"
+          export VPR_NUM_WORKERS=$(nproc)
           make env
           cd build
           ninja -j$(nproc) all_qlf_k4n8_tests_adder
@@ -69,6 +70,7 @@ jobs:
           export GITHASH=$(git rev-parse --short HEAD)
           mkdir ${ROOT}/${INSTALL_DIR}
           export CMAKE_FLAGS="-GNinja -DINSTALL_FAMILIES=qlf_k4n8,qlf_k6n10 -DCMAKE_INSTALL_PREFIX=${ROOT}/${INSTALL_DIR}"
+          export VPR_NUM_WORKERS=$(nproc)
           make env
           cd build
           ninja install -j$(nproc)
