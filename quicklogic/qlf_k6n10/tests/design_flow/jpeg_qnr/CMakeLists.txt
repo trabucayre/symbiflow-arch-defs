@@ -1,8 +1,8 @@
 set(JPEG_QNR ${QL_DESIGNS_DIR}/jpeg_qnr/jpeg_qnr.v)
-#set(FILE1 ${QL_DESIGNS_DIR}/div_su.v)
-#set(FILE2 ${QL_DESIGNS_DIR}/div_uu.v)
-add_file_target(FILE ${CURR_DIR}/div_su.v SCANNER_TYPE verilog)
-add_file_target(FILE ${CURR_DIR}/div_uu.v SCANNER_TYPE verilog)
+set(FILE1 ${QL_DESIGNS_DIR}/jpeg_qnr/div_su.v)
+set(FILE2 ${QL_DESIGNS_DIR}/jpeg_qnr/div_uu.v)
+#add_file_target(FILE ${CURR_DIR}/div_su.v SCANNER_TYPE verilog)
+#add_file_target(FILE ${CURR_DIR}/div_uu.v SCANNER_TYPE verilog)
 
 add_fpga_target(
   NAME jpeg_qnr_test-gf12-no-adder
