@@ -1,6 +1,6 @@
 set(UNSIGNED_MULT_80 ${QL_DESIGNS_DIR}/unsigned_mult_80/unsigned_mult_80.v)
 
-add_file_target(FILE ${UNSIGNED_MULT_80} SCANNER_TYPE verilog)
+#add_file_target(FILE ${UNSIGNED_MULT_80} SCANNER_TYPE verilog)
 
 add_fpga_target(
   NAME unsigned_mult_80-gf12-no-adder
