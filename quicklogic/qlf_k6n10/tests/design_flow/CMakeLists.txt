@@ -9,7 +9,7 @@ add_subdirectory(IR_Remote)
 add_subdirectory(unsigned_mult_80)
 add_subdirectory(adder_128)
 add_subdirectory(adder_64)
-add_subdirectory(adder_FFs)
+#add_subdirectory(adder_FFs)
 add_subdirectory(top_120_13)
 add_subdirectory(multiplier_8bit)
 add_subdirectory(shift_reg_8192)
@@ -24,19 +24,15 @@ add_subdirectory(lut4_8ffs)
 add_subdirectory(shift_reg_8)
 add_subdirectory(shift_reg_576)
 add_subdirectory(shift_reg_1024)
-#add_subdirectory(io_tc1)
-#add_subdirectory(io_reg_tc1)
+add_subdirectory(io_tc1)
+add_subdirectory(io_reg_tc1)
 add_subdirectory(jpeg_qnr)
 add_subdirectory(e_sdio_host_controller)
 add_subdirectory(sdio_client_top)
 add_subdirectory(spi_master_top)
-#add_subdirectory(VexRiscv)
-#add_subdirectory(conv2d)
-#add_subdirectory(conv2d_no_ksa)
+add_subdirectory(VexRiscv)
+add_subdirectory(conv2d)
+add_subdirectory(conv2d_no_ksa)
 #TODO: Add this testcase after yosys plugin support dsp
 #add_subdirectory(mac_16)
-
-#The k6n10 architecture can be scaled up to be able to run
-#Ressource consuming testcases below
-
-#add_subdirectory(multi_enc_decx2x4) #1026 IO required
+add_subdirectory(multi_enc_decx2x4) #1026 IO required
