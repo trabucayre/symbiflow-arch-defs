@@ -35,4 +35,4 @@ add_subdirectory(conv2d)
 add_subdirectory(conv2d_no_ksa)
 #TODO: Add this testcase after yosys plugin support dsp
 #add_subdirectory(mac_16)
-add_subdirectory(multi_enc_decx2x4) #1026 IO required
+#add_subdirectory(multi_enc_decx2x4) #1026 IO required
