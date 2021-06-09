@@ -20,5 +20,5 @@ add_fpga_target(
   INPUT_SDC_FILE conv2d.sdc
   )
 
-add_dependencies(all_qlf_k6n10_tests_no_adder conv2d_test-gf12-no-adder_bit)
-add_dependencies(all_qlf_k6n10_tests_adder    conv2d_test-gf12-adder_bit)
+add_dependencies(all_qlf_k6n10_tests_no_adder conv2d_test-gf12-no-adder_route)
+add_dependencies(all_qlf_k6n10_tests_adder    conv2d_test-gf12-adder_route)
