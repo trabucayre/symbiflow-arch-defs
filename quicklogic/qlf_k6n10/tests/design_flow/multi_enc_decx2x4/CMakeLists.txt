@@ -3,10 +3,10 @@ set(ENCODER 		${QL_DESIGNS_DIR}/multi_enc_decx2x4/encoder.v)
 set(TOPENC_DECX2 	${QL_DESIGNS_DIR}/multi_enc_decx2x4/topenc_decx2.v)
 set(MULTI_ENC_DECX2X4 	${QL_DESIGNS_DIR}/multi_enc_decx2x4/multi_enc_decx2x4.v)
 
-add_file_target(FILE ${DECODER} SCANNER_TYPE verilog)
-add_file_target(FILE ${ENCODER} SCANNER_TYPE verilog)
-add_file_target(FILE ${TOPENC_DECX2} SCANNER_TYPE verilog)
-add_file_target(FILE ${MULTI_ENC_DECX2X4} SCANNER_TYPE verilog)
+#add_file_target(FILE ${DECODER} SCANNER_TYPE verilog)
+#add_file_target(FILE ${ENCODER} SCANNER_TYPE verilog)
+#add_file_target(FILE ${TOPENC_DECX2} SCANNER_TYPE verilog)
+#add_file_target(FILE ${MULTI_ENC_DECX2X4} SCANNER_TYPE verilog)
 
 add_fpga_target(
   NAME multi_enc_decx2x4-gf12-no-adder
