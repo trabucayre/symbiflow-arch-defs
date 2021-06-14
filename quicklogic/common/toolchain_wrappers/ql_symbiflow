@@ -91,8 +91,11 @@ for arg in $@; do
 		-synth|-compile)
             OPT="synth"
             ;;
-        -y|-f|+incdir+*|+libext+*|+define+*)
+        -y|+incdir+*|+libext+*|+define+*)
             OPT="compile_xtra"
+            ;;
+        -f)
+            OPT="options_file"
             ;;
 		-h|--help)
             exit 0
@@ -147,6 +150,9 @@ for arg in $@; do
                     OUT+="$arg "
                     ;;
                 "compile_xtra")
+                    ;;
+                "options_file")
+                    COMPILE_EXTRA_ARGS+=("-f \"`realpath $arg`\" ")
                     ;;
                 *)
                     echo "Refer help for more details: ql_symbiflow -h "
