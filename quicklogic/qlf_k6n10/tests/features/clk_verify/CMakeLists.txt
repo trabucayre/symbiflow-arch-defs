@@ -16,8 +16,9 @@ add_fpga_target(
 
 add_dependencies(all_qlf_k6n10_tests_adder clk0_verify)
 
+# Increase clock range
 add_custom_target(
   clk0_verify
-  COMMAND egrep -q "Fmax: [6-9][0-9]." ${ROUTE_LOG} 
+  COMMAND egrep -q "Fmax: [5-9][0-9]." ${ROUTE_LOG} 
   DEPENDS dct_mac_test3-gf12-adder_route
   )
