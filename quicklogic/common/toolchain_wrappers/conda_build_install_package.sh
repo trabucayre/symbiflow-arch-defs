@@ -34,5 +34,5 @@ conda activate
 pip install python-constraint
 pip install serial
 pip install git+https://github.com/QuickLogic-Corp/quicklogic-fasm@318abca
-pip install git+https://github.com/QuickLogic-Corp/ql_fasm
+pip install git+https://github.com/QuickLogic-Corp/ql_fasm@e5d0915
 conda deactivate
