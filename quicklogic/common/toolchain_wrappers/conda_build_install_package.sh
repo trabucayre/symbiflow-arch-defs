@@ -22,17 +22,25 @@ source "$INSTALL_DIR/conda/etc/profile.d/conda.sh"
 echo "include-system-site-packages=false" >> $INSTALL_DIR/conda/pyvenv.cfg
 CONDA_FLAGS="-y --override-channels -c defaults -c conda-forge"
 conda update $CONDA_FLAGS -q conda
-curl https://storage.googleapis.com/symbiflow-arch-defs-install/quicklogic-arch-defs-63c3d8f9.tar.gz --output arch.tar.gz
+#curl https://storage.googleapis.com/symbiflow-arch-defs-install/quicklogic-arch-defs-63c3d8f9.tar.gz --output arch.tar.gz
+curl $(curl https://storage.googleapis.com/symbiflow-arch-defs-install/latest-qlf) > arch.tar.gz
 tar -C $INSTALL_DIR -xvf arch.tar.gz && rm arch.tar.gz
-conda install $CONDA_FLAGS -c litex-hub/label/main yosys="0.9_5266_g0fb4224e 20210301_104249_py37"
+conda install $CONDA_FLAGS -c litex-hub/label/main symbiflow-yosys="0.9_0_g40d9e120 20210413_171008_libffi33"
 conda install $CONDA_FLAGS -c litex-hub/label/main symbiflow-yosys-plugins="1.0.0_7_313_g5a87bf8 20210507_125510"
-conda install $CONDA_FLAGS -c litex-hub/label/main vtr-optimized="8.0.0_3614_gb3b34e77a 20210507_125510"
+conda install $CONDA_FLAGS -c litex-hub/label/main vtr-optimized="8.0.0_3452_ge7d45e013 20210318_102115"
 conda install $CONDA_FLAGS -c litex-hub iverilog
 conda install $CONDA_FLAGS -c tfors gtkwave
 conda install $CONDA_FLAGS make lxml simplejson intervaltree git pip
 conda activate
 pip install python-constraint
 pip install serial
-pip install git+https://github.com/QuickLogic-Corp/quicklogic-fasm@318abca
+#pip install git+https://github.com/QuickLogic-Corp/quicklogic-fasm@318abca
 pip install git+https://github.com/QuickLogic-Corp/ql_fasm@e5d0915
 conda deactivate
+setup_file=$INSTALL_DIR/setup.sh
+echo "export INSTALL_DIR=$INSTALL_DIR" >$setup_file
+chmod 755 $setup_file
+#adding symbiflow toolchain binaries to PATH
+echo "export PATH=\"\$INSTALL_DIR/quicklogic-arch-defs/bin:\$INSTALL_DIR/quicklogic-arch-defs/bin/python:\$PATH\"" >>$setup_file
+echo "source \"\$INSTALL_DIR/conda/etc/profile.d/conda.sh\"" >>$setup_file
+echo "conda activate" >>$setup_file
