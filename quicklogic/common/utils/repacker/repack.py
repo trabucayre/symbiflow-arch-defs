@@ -625,6 +625,52 @@ def annotate_net_endpoints(
         )
 
 
+def annotate_global_routes(clb_graph, global_routes):
+    """
+    Assigns global routes with nets from the CLB graph. Throws an error on a
+    net conflict
+    """
+
+    for node in clb_graph.nodes.values():
+
+        # Consider only top-level SOURCE and SINK nodes
+        if node.type not in [NodeType.SOURCE, NodeType.SINK]:
+            continue
+        if node.path.count(".") > 1:
+            continue
+
+        # No net
+        if not node.net:
+            continue
+
+        # Get port name
+        path = [PathNode.from_string(p) for p in node.path.split(".")]
+        port = str(path[-1])
+
+        # Not a global route
+        if port not in global_routes:
+            continue
+
+        # Check net
+        net = global_routes[port]
+        if net is not None and net != node.net:
+            logging.critical(
+                "Global route conflict! Route '{}', nets '{}', '{}'".format(
+                    port, net, node.net
+                )
+            )
+            exit(-1)
+
+        # Assign
+        if net is None:
+            logging.debug(
+                "    Net '{}' assigned to global route '{}'".format(
+                    node.net, port
+                )
+            )
+            global_routes[port] = node.net
+
+
 def rotate_truth_table(table, rotation_map):
     """
     Rotates address bits of the truth table of a LUT given a bit map.
@@ -1064,6 +1110,11 @@ def main():
         help="Controls whether buffer LUTs are to be absorbed downstream"
     )
     parser.add_argument(
+        "--no_global_clocks",
+        action="store_true",
+        help="Disables treating top-level CLB clock inputs as global"
+    )
+    parser.add_argument(
         "--dump-dot",
         action="store_true",
         help="Dump graphviz .dot files for pb_type graphs"
@@ -1118,6 +1169,26 @@ def main():
         name: PbType.from_etree(elem)
         for name, elem in xml_clbs.items()
     }
+
+    # Identify global routes
+    global_routes = {}
+    for pb_type in clb_pbtypes.values():
+        for port in pb_type.ports.values():
+
+            # Has to be either explicitly defined as a global port or be a
+            # clock input when they are treated as global.
+            if not port.is_global and \
+               not (port.type == PortType.CLOCK and not args.no_global_clocks):
+                continue
+
+            for pinspec in port.yield_pins():
+                name = "{}[{}]".format(*pinspec)
+                global_routes[name] = None
+
+    # DEBUG
+    logging.debug(" global routes:")
+    for name in sorted(global_routes.keys()):
+        logging.debug("  " + name)
 
     # Build a list of models
     logging.info("Building primitive models...")
@@ -1384,6 +1455,8 @@ def main():
             block=clb_block,
             constraints=repacking_constraints
         )
+
+        annotate_global_routes(clb_graph=graph, global_routes=global_routes)
 
         # For repacked leafs
         for block, rule, (path, dst_pbtype) in blocks_to_repack:
