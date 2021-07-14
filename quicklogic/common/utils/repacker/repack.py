@@ -1172,6 +1172,8 @@ def main():
 
     # Identify global routes
     global_routes = {}
+    global_clock_routes = set()
+
     for pb_type in clb_pbtypes.values():
         for port in pb_type.ports.values():
 
@@ -1184,6 +1186,9 @@ def main():
             for pinspec in port.yield_pins():
                 name = "{}[{}]".format(*pinspec)
                 global_routes[name] = None
+
+                if port.type == PortType.CLOCK:
+                    global_clock_routes.add(name)
 
     # DEBUG
     logging.debug(" global routes:")
@@ -1263,8 +1268,86 @@ def main():
         total_blocks += clb_block.count_leafs()
     logging.debug(" {} leaf blocks".format(total_blocks))
 
+    # Identify global clock nets
+    global_clock_nets = set()
+    for clb_block in packed_netlist.blocks.values():
+        for port in clb_block.ports.values():
+            for pin in range(port.width):
+
+                # Format port pin name
+                name = "{}[{}]".format(port.name, pin)
+
+                # Not a global clock route port, skip
+                if name not in global_clock_routes:
+                    continue
+
+                # Get connected net
+                net = clb_block.find_net_for_port(port.name, pin)
+                if net is None:
+                    continue
+
+                global_clock_nets.add(net)
+
+    logging.info(" {} global clocks".format(len(global_clock_nets)))
+    for net in global_clock_nets:
+        logging.debug("  {}".format(net))
+
+    # Too many clocks, throw an error
+    if len(global_clock_nets) > len(global_clock_routes):
+        logging.critical(
+            " Too many global clocks ({}) for this architecture ({})".format(
+                len(global_clock_nets),
+                len(global_clock_routes),
+            )
+        )
+        exit(-1)
+
     init_time = time.perf_counter() - init_time
     repack_time = time.perf_counter()
+
+    # Constrain unconstrained global clocks
+    if global_clock_nets:
+
+        logging.info("Constraining unconstrained global clock nets...")
+
+        # Identify unconstrainted global clock nets and routes
+        free_clock_nets = set(global_clock_nets)
+        free_clock_routes = set(global_clock_routes)
+
+        for constraint in repacking_constraints:
+
+            if constraint.net in global_clock_nets:
+                free_clock_nets.discard(constraint.net)
+
+            name = "{}[{}]".format(constraint.port, constraint.pin)
+            if name in free_clock_routes:
+                free_clock_routes.discard(name)
+
+        # Cannot constrain all
+        if len(free_clock_routes) < len(free_clock_nets):
+            logging.critical(
+                " Cannot constrain all free global clocks ({}) as there are"
+                " to few global clock routes available ({})".format(
+                    len(free_clock_nets), len(free_clock_routes)
+                )
+            )
+            exit(-1)
+
+        # Make the constraints
+        block_types = set([b.type for b in packed_netlist.blocks.values()])
+        for net, port in zip(free_clock_nets, free_clock_routes):
+            for block_type in block_types:
+                constraint = RepackingConstraint(
+                    net=net, block_type=block_type, port_spec=port
+                )
+                repacking_constraints.append(constraint)
+
+                logging.debug(
+                    " {}: {}.{}[{}]".format(
+                        constraint.net, constraint.block_type, constraint.port,
+                        constraint.pin
+                    )
+                )
 
     # Check if the repacking constraints do not refer to any non-existent nets
     if repacking_constraints:
