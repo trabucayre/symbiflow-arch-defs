@@ -655,9 +655,8 @@ def annotate_global_routes(clb_graph, global_routes):
         net = global_routes[port]
         if net is not None and net != node.net:
             logging.critical(
-                "ERROR: Global route conflict! Route '{}', nets '{}', '{}'".format(
-                    port, net, node.net
-                )
+                "ERROR: Global route conflict! Route '{}', nets '{}', '{}'".
+                format(port, net, node.net)
             )
             exit(-1)
 
@@ -874,6 +873,33 @@ def verify_global_routes(clb, global_routes):
     global_nets = set(global_routes.values())
     error = False
 
+    # This helper function checks whether a net is driven by an inpad block
+    def is_driven_by_inpad(block, net):
+
+        # This is a leaf block
+        if block.is_leaf:
+
+            # Not an inpad
+            if not block.instance.startswith("inpad"):
+                return False
+
+            # Look for the net in ports
+            for port in block.ports.values():
+                for conn in port.connections.values():
+                    if isinstance(conn, str) and conn == net:
+                        return True
+
+            # Net not found
+            return False
+
+        # This is a non-leaf block. Recurse
+        else:
+            for child in block.blocks.values():
+                if is_driven_by_inpad(child, net):
+                    return True
+
+        return False
+
     # Loop over all port and their pins
     for port in clb.ports.values():
         for pin in range(port.width):
@@ -890,16 +916,30 @@ def verify_global_routes(clb, global_routes):
 
             # Check
             if net in global_nets:
-                logging.critical(" ERROR: Global net '{}' connected to a non-global port '{}' of {}".format(
-                    net,
-                    name,
-                    clb
-                ))
+
+                # Check if the net is driven by a leaf block representing an
+                # input pad. Even though VPR treads an input pad for a global
+                # net as virtual it has to be present in the netlist and this
+                # is not an error
+                if is_driven_by_inpad(clb, net):
+                    logging.debug(
+                        " Global net '{}' driven by inpad in {}".format(
+                            net, clb
+                        )
+                    )
+                    continue
+
+                # This is an error
+                logging.critical(
+                    " ERROR: Global net '{}' connected to a non-global port '{}' of {}"
+                    .format(net, name, clb)
+                )
                 error = True
 
     # Raise an error
     if error:
         exit(-1)
+
 
 # =============================================================================
 
@@ -1331,7 +1371,8 @@ def main():
     # Too many clocks, throw an error
     if len(global_clock_nets) > len(global_clock_routes):
         logging.critical(
-            " ERROR: Too many global clocks ({}) for this architecture ({})".format(
+            " ERROR: Too many global clocks ({}) for this architecture ({})".
+            format(
                 len(global_clock_nets),
                 len(global_clock_routes),
             )
@@ -1424,9 +1465,8 @@ def main():
         clb_pbtype = clb_pbtypes.get(clb_block.type, None)
         if clb_pbtype is None:
             logging.critical(
-                "ERROR: Complex block type '{}' not found in the VPR arch".format(
-                    clb_block.type
-                )
+                "ERROR: Complex block type '{}' not found in the VPR arch".
+                format(clb_block.type)
             )
             exit(-1)
 
@@ -1486,7 +1526,8 @@ def main():
             # There must be only a single repack target per block
             if len(candidates) > 1:
                 logging.critical(
-                    "ERROR: Multiple repack targets found! {}".format(candidates)
+                    "ERROR: Multiple repack targets found! {}".
+                    format(candidates)
                 )
                 exit(-1)
 
