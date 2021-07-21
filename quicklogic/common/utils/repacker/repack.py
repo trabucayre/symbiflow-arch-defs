@@ -865,6 +865,42 @@ def syncrhonize_attributes_and_parameters(eblif, packed_netlist):
         walk(block)
 
 
+def verify_global_routes(clb, global_routes):
+    """
+    Checks if there are no globally routed nets connected to non-global ports
+    of the CLB. Should that happen, an error is thrown
+    """
+
+    global_nets = set(global_routes.values())
+    error = False
+
+    # Loop over all port and their pins
+    for port in clb.ports.values():
+        for pin in range(port.width):
+
+            # Check if it is a non-global port
+            name = "{}[{}]".format(port.name, pin)
+            if name in global_routes:
+                continue
+
+            # Get net
+            net = clb.find_net_for_port(port.name, pin)
+            if not net:
+                continue
+
+            # Check
+            if net in global_nets:
+                logging.critical(" Global net '{}' connected to a non-global port '{}' of {}".format(
+                    net,
+                    name,
+                    clb
+                ))
+                error = True
+
+    # Raise an error
+    if error:
+        exit(-1)
+
 # =============================================================================
 
 
@@ -1632,6 +1668,11 @@ def main():
     # Optional dump
     if args.dump_netlist:
         eblif.to_file("netlist.repacked_and_cleaned.eblif")
+
+    # Verify global routes
+    logging.info("Verifying global routes...")
+    for clb_block in packed_netlist.blocks.values():
+        verify_global_routes(clb_block, global_routes)
 
     # Write the circuit netlist
     logging.info("Writing EBLIF circuit netlist...")
