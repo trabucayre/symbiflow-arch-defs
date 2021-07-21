@@ -586,7 +586,7 @@ def annotate_net_endpoints(
 
         else:
             logging.critical(
-                "Cannot find port '{}' of block type '{}'".format(
+                "ERROR: Cannot find port '{}' of block type '{}'".format(
                     PathNode(constraint.port, constraint.pin).to_string(),
                     block_type
                 )
@@ -601,7 +601,7 @@ def annotate_net_endpoints(
             name_map = {NodeType.SINK: "output", NodeType.SOURCE: "input"}
 
             logging.warning(
-                "Cannot constrain {} net '{}' to {} port '{}'".format(
+                "WARNING: Cannot constrain {} net '{}' to {} port '{}'".format(
                     name_map[next(iter(node_types))],
                     constraint.net,
                     name_map[port_node.type],
@@ -655,7 +655,7 @@ def annotate_global_routes(clb_graph, global_routes):
         net = global_routes[port]
         if net is not None and net != node.net:
             logging.critical(
-                "Global route conflict! Route '{}', nets '{}', '{}'".format(
+                "ERROR: Global route conflict! Route '{}', nets '{}', '{}'".format(
                     port, net, node.net
                 )
             )
@@ -890,7 +890,7 @@ def verify_global_routes(clb, global_routes):
 
             # Check
             if net in global_nets:
-                logging.critical(" Global net '{}' connected to a non-global port '{}' of {}".format(
+                logging.critical(" ERROR: Global net '{}' connected to a non-global port '{}' of {}".format(
                     net,
                     name,
                     clb
@@ -1331,7 +1331,7 @@ def main():
     # Too many clocks, throw an error
     if len(global_clock_nets) > len(global_clock_routes):
         logging.critical(
-            " Too many global clocks ({}) for this architecture ({})".format(
+            " ERROR: Too many global clocks ({}) for this architecture ({})".format(
                 len(global_clock_nets),
                 len(global_clock_routes),
             )
@@ -1362,8 +1362,8 @@ def main():
         # Cannot constrain all
         if len(free_clock_routes) < len(free_clock_nets):
             logging.critical(
-                " Cannot constrain all free global clocks ({}) as there are"
-                " to few global clock routes available ({})".format(
+                " ERROR: Cannot constrain all free global clocks ({}) as there "
+                "are to few global clock routes available ({})".format(
                     len(free_clock_nets), len(free_clock_routes)
                 )
             )
@@ -1398,7 +1398,7 @@ def main():
 
         if invalid_nets:
             logging.critical(
-                " Error: constraints refer to nonexistent net(s): {}".format(
+                " ERROR: constraints refer to nonexistent net(s): {}".format(
                     ", ".join(invalid_nets)
                 )
             )
@@ -1423,8 +1423,8 @@ def main():
         # Find a corresponding root pb_type (complex block) in the architecture
         clb_pbtype = clb_pbtypes.get(clb_block.type, None)
         if clb_pbtype is None:
-            logging.error(
-                "Complex block type '{}' not found in the VPR arch".format(
+            logging.critical(
+                "ERROR: Complex block type '{}' not found in the VPR arch".format(
                     clb_block.type
                 )
             )
@@ -1480,13 +1480,13 @@ def main():
 
             # No candidates
             if not candidates:
-                logging.critical("No repack target found!")
+                logging.critical("ERROR: No repack target found!")
                 exit(-1)
 
             # There must be only a single repack target per block
             if len(candidates) > 1:
                 logging.critical(
-                    "Multiple repack targets found! {}".format(candidates)
+                    "ERROR: Multiple repack targets found! {}".format(candidates)
                 )
                 exit(-1)
 
@@ -1503,7 +1503,7 @@ def main():
 
             if path in repack_targets:
                 logging.error(
-                    "Multiple blocks are to be repacked into '{}'".
+                    "ERROR: Multiple blocks are to be repacked into '{}'".
                     format(path)
                 )
             repack_targets.add(path)
