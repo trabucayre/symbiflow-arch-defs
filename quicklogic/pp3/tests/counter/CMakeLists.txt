@@ -50,4 +50,3 @@ add_dependencies(all_ql_tests_bit counter-ql-quickfeather_bit)
 add_dependencies(all_ql_tests_bit_v counter-ql-quickfeather_bit_v)
 add_dependencies(all_ql_tests_prog counter-ql-quickfeather_jlink)
 add_dependencies(all_ql_tests_prog counter-ql-quickfeather_openocd)
-
