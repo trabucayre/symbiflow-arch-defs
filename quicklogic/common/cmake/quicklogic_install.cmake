@@ -158,6 +158,16 @@ function(DEFINE_QL_TOOLCHAIN_TARGET)
   install(FILES ${DEFINE_QL_TOOLCHAIN_TARGET_CELLS_SIM}
           DESTINATION share/symbiflow/techmaps/${FAMILY})
 
+  if("${FAMILY}" STREQUAL "qlf_k4n8")
+    # install lib files
+    install(DIRECTORY ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/${FAMILY}/devices/umc22/
+      DESTINATION "share/symbiflow/arch/${FAMILY}-${FAMILY}_umc22_${FAMILY}-${FAMILY}_umc22/lib"
+      FILES_MATCHING
+      PATTERN "*.txt"
+      PATTERN "*.json"
+      PATTERN "*.xml")
+  endif()
+
   # install Yosys scripts
   install(FILES ${DEFINE_QL_TOOLCHAIN_TARGET_CONV_SCRIPT} ${DEFINE_QL_TOOLCHAIN_TARGET_SYNTH_SCRIPT}
           DESTINATION share/symbiflow/scripts/${FAMILY})
@@ -216,7 +226,7 @@ function(DEFINE_QL_DEVICE_CELLS_INSTALL_TARGET)
           DESTINATION "share/symbiflow/arch/${DEVICE}_${PACKAGE}"
           RENAME "arch_${DEVICE}_${PACKAGE}.xml")
 
-  if(NOT "${DEVICE}" STREQUAL "ql-pp3e" AND NOT "${DEVICE}" STREQUAL "ql-eos-s3")
+  if("${FAMILY}" STREQUAL "qlf_k4n8")
 	  # install lib files
 	  install(DIRECTORY ${QLF_FPGA_DATABASE_DIR}/${FAMILY}/lib/
 		  DESTINATION "share/symbiflow/arch/${DEVICE}_${PACKAGE}/lib")
