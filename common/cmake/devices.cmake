@@ -1697,7 +1697,6 @@ function(ADD_FPGA_TARGET)
       NOT "${SDC_PATCH_TOOL}" STREQUAL "" AND
       NOT "${SDC_FILE}" STREQUAL "" AND
       NOT "${INPUT_IO_FILE}" STREQUAL "")
-    set(SDC_DEPS "")
 
     set(IN_SDC ${SDC_FILE})
 
