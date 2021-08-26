@@ -18,31 +18,18 @@ start_section "info.conda.config" "Info on ${YELLOW}conda config${NC}"
 conda config --show
 end_section "info.conda.config"
 
+# Code formatting
+start_section "symbiflow.code_formatting" "Checking code formatting"
 make_target check_python "Check code formatting"
-
 make_target lint_python "Check code style"
+end_section "symbiflow.code_formatting"
 
-make_target test_python "Run Python unit tests"
+# Python unit tests
+start_section "symbiflow.python_tests" "Running Python unit tests"
+make_target test_python
+end_section "symbiflow.python_tests"
 
-make_target all_merged_arch_xmls "Build all arch XMLs"
-
-start_section "symbiflow.build_all_rrgraph_xmls" "Build all rrgraph XMLs."
-make all_rrgraph_xmls
-end_section "symbiflow.build_all_rrgraph_xmls"
-
-MAKE_JOBS=1 make_target all_route_tests "Complete all routing tests"
-
-echo "Suppressing some xml linting, as the 5k/8k parts cannot be built on GH actions."
-MAKE_JOBS=1	# workaround for possible race condition
-make_target all_xml_lint "Complete all xmllint"
-
-echo "Run Quicklogic specific testcases"
+# QuickLogic tests
+start_section "symbiflow.quicklogic_tests" "Running all QuickLogic tests"
 make_target all_quicklogic_tests
-
-# TODO: Check tests are broken, yosys regression?
-#start_section "symbiflow.run_check_tests" "Complete all equivalence tests"
-#make all_check_tests
-#end_section "symbiflow.run_check_tests"
-
-echo "Suppressing some demo bitstreams, as the 8k parts cannot be built on GH actions."
-make_target all "Building all demo bitstreams"
+end_section "symbiflow.quicklogic_tests"
