@@ -47,7 +47,7 @@ function(QUICKLOGIC_DEFINE_DEVICE_TYPE)
 
   set(DEVICE_DIR_DATA ${DEVICE})
   if(${DEVICE} STREQUAL "ql-pp3")
-	  set(DEVICE_DIR_DATA "ql-pp3e")	# FIXME: use PP3 timing data when it will be available
+	  set(DEVICE_DIR_DATA "ql-eos-s3")	# FIXME: use PP3 timing data when it will be available
   endif()
 
   # The techfile and routing timing file

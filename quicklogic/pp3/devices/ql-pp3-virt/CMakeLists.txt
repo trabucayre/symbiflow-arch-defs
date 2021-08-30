@@ -1,12 +1,12 @@
-set(LIB_TIMING_FILES "*_BC_120V.lib" "*_WC_120V.lib" "BIDIR_COM_BC_180V.lib")
-set(DONT_NORMALIZE_FILES "RAM_COM_BC_120V.lib" "RAM_COM_WC_120V.lib")
+set(LIB_TIMING_FILES "*_ss_0p990v_m040c.lib" "*_ss_0p990v_m040c_Cmax_2P97V.lib")
+set(DONT_NORMALIZE_FILES "RAM_ss_0p990v_m040c.lib" "RAM_ff_0p990v_m040c.lib")
 
 quicklogic_define_device_type(
   FAMILY pp3
   DEVICE ql-pp3
   ARCH ql-s3
   PACKAGES wlcsp
-  ROUTING_TIMING_FILE_NAME qlal3s2_RoutingDelays.csv
+  ROUTING_TIMING_FILE_NAME qlal4s3b_RoutingDelays_SSM40.csv
   TECHFILE_NAME QL3P1K.xml
   LIB_TIMING_FILES ${LIB_TIMING_FILES}
   DONT_NORMALIZE_FILES ${DONT_NORMALIZE_FILES}
@@ -15,6 +15,6 @@ quicklogic_define_device_type(
     LOGIC
     CLOCK BIDIR
     GMUX
-  RAM_TIMING_SDF RAM_COM_BC_120V
-  RAM_PBTYPE_COPY ram2.pb_type.xml
+  RAM_TIMING_SDF RAM_ss_0p990v_m040c
+  RAM_PBTYPE_COPY ram_a1.pb_type.xml
 )
