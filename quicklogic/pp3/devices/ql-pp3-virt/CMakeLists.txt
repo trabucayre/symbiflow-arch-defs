@@ -1,0 +1,20 @@
+set(LIB_TIMING_FILES "*_ss_0p990v_m040c.lib" "*_ss_0p990v_m040c_Cmax_2P97V.lib")
+set(DONT_NORMALIZE_FILES "RAM_ss_0p990v_m040c.lib" "RAM_ff_0p990v_m040c.lib")
+
+quicklogic_define_device_type(
+  FAMILY pp3
+  DEVICE ql-pp3
+  ARCH ql-s3
+  PACKAGES wlcsp
+  ROUTING_TIMING_FILE_NAME qlal4s3b_RoutingDelays_SSM40.csv
+  TECHFILE_NAME QL3P1K.xml
+  LIB_TIMING_FILES ${LIB_TIMING_FILES}
+  DONT_NORMALIZE_FILES ${DONT_NORMALIZE_FILES}
+  PB_TYPES
+    GND VCC
+    LOGIC
+    CLOCK BIDIR
+    GMUX
+  RAM_TIMING_SDF RAM_ss_0p990v_m040c
+  RAM_PBTYPE_COPY ram_a1.pb_type.xml
+)
