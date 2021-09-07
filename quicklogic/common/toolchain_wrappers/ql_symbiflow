@@ -256,7 +256,7 @@ if [[ $1 == "-compile" || $1 == "-post_verilog" ]]; then
   fi
   if [[  "$DEVICE_CHECK" =~ ^(VALID)$ ]]; then
     if [ -z "$PART" ]; then
-	   if [ -n "$PCF" && $USE_PINMAP -ne 0 ];then
+	   if [ -n "$PCF" && $USE_PINMAP -ne 0 ]; then
 	     echo "Error: pcf file cannot be used without declaring PINMAP CSV file"
          exit 1
        fi
