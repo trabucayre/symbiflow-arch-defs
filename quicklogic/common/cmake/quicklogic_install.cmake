@@ -36,6 +36,10 @@ function(DEFINE_QL_TOOLCHAIN_TARGET)
         symbiflow_route
         symbiflow_synth
         symbiflow_write_fasm
+        symbiflow_write_bitheader
+        symbiflow_write_jlink
+        symbiflow_write_openocd
+        symbiflow_fasm2bels
   )
 
   # Export VPR arguments
@@ -178,10 +182,22 @@ function(DEFINE_QL_TOOLCHAIN_TARGET)
 	  message(STATUS "Installing pack.tcl for ${FAMILY}")
   endif()
 
+  # Install helper scripts
+  set(SCRIPTS
+    create_ioplace.py
+    create_place_constraints.py
+    eos_s3_iomux_config.py
+  )
 
-  install(FILES ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/common/utils/create_ioplace.py
-          DESTINATION bin/python
-          PERMISSIONS WORLD_EXECUTE WORLD_READ OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE)
+  foreach(NAME ${SCRIPTS})
+    set(FILE ${symbiflow-arch-defs_SOURCE_DIR}/quicklogic/${FAMILY}/utils/${NAME})
+    if(EXISTS "${FILE}")
+      install(FILES ${FILE}
+              DESTINATION bin/python
+              RENAME ${FAMILY}_${NAME}
+              PERMISSIONS WORLD_EXECUTE WORLD_READ OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE)
+    endif()
+  endforeach()
 
   # Install FASM database
   set(FASM_DATABASE_DIR "${QLF_FPGA_DATABASE_DIR}/${FAMILY}/fasm_database/")
