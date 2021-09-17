@@ -118,6 +118,8 @@ export SYNTH_JSON=${TOP}_io.json
 export OUT_SYNTH_V=${TOP}_synth.v
 export OUT_EBLIF=${TOP}.eblif
 export OUT_FASM_EXTRA=${TOP}_fasm_extra.fasm
+export UTILS_PATH=`realpath ${MYPATH}/python`
+export PYTHON3=`which python3`
 
 if [ -s $PCF ]; then
     export PCF_FILE=$PCF
