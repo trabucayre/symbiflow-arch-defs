@@ -332,7 +332,6 @@ fi
 
 export PCF_FILE=$PCF
 export JSON=$JSON
-export TOP_F=$TOP
 export PINMAP_FILE=$PINMAPCSV
 export MAX_CRITICALITY=$MAX_CRITICALITY
 ##### Create Makefile #####
